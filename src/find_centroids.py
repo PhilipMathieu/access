@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-g", "--graph", help="graph to use for search", default="data/maine.graphml", type=pathlib.Path)
 parser.add_argument("input", help="GeoPandas-compatible file to add centroids to", type=pathlib.Path)
 parser.add_argument("output_suffix", help="output shapefile suffix", default="_with_nodes", type=pathlib.Path)
+parser.add_argument("-z", "--zip", help="zip the output shapefile when finished", default=False, action="store_true")
 args = parser.parse_args()
 
 if __name__ == "__main__":
@@ -25,4 +26,9 @@ if __name__ == "__main__":
 
     # find nearest nodes using spatial index
     polys["osmid"] = gdf_nodes.loc[gdf_nodes.sindex.nearest(polys.centroid)[1]]["osmid"].values
-    polys.to_file("data/tl_2022_23_tract_with_nodes"+args.output_suffix)
+    outfile = "data/tl_2022_23_tract_with_nodes"+args.output_suffix
+    polys.to_file(outfile)
+
+    if args.zip:
+        from shutil import make_archive
+        make_archive(outfile+".zip", "zip", outfile)
