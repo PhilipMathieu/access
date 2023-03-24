@@ -1,0 +1,19 @@
+name: ox
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - osmnx
+  - ipykernel
+  - ca-certificates
+  - certifi
+  - openssl
+  - contextily
+  - tqdm
+  - ipywidgets
+  - jupyter
+  - seaborn
+  - cenpy
+  - python-dotenv
+  - census
+prefix: /home/philip/miniconda3/envs/ox
