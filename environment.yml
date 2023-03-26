@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - python=3.10
   - osmnx
   - ipykernel
   - ca-certificates
@@ -15,5 +16,4 @@ dependencies:
   - seaborn
   - cenpy
   - python-dotenv
-  - census
 prefix: /home/philip/miniconda3/envs/ox
