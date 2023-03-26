@@ -31,7 +31,7 @@ if __name__ == "__main__":
     polys["osmid"] = gdf_nodes.loc[gdf_nodes.sindex.nearest(polys.centroid)[1]]["osmid"].values
 
     # save output
-    outfile = str(args.input)+args.suffix+".shp.zip"
+    outfile = str(args.input).rsplit(".", 1)[1]+args.suffix+".shp.zip"
     print("Saving", outfile)
     polys.to_file(outfile, driver="ESRI Shapefile")
 
