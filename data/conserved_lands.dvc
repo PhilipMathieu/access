@@ -1,0 +1,6 @@
+outs:
+- md5: 0eaa298cc788252b1c28d5a80de02bc5.dir
+  size: 36148365
+  nfiles: 2
+  hash: md5
+  path: conserved_lands
