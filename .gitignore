@@ -160,4 +160,3 @@ cython_debug/
 #.idea/
 
 cache/*
-data/blocks/*h3_10.csv
