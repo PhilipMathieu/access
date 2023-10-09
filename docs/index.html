@@ -5,11 +5,11 @@
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZMYJN1RF9Q"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            gtag('js', new Date());
 
-      gtag('config', 'G-ZMYJN1RF9Q');
+            gtag('config', 'G-ZMYJN1RF9Q');
     </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -28,6 +28,9 @@
         rel="stylesheet" type="text/css" />
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="css/styles.css" rel="stylesheet" />
+    <!-- MapLibre GL JS -->
+    <script src=https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.js></script>
+    <link href=https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.css rel="stylesheet" />
 </head>
 
 <body id="page-top">
@@ -46,8 +49,7 @@
     </nav>
     <!-- Map-->
     <div class="map" id="map">
-        <iframe
-            src="https://pmathieu.maps.arcgis.com/apps/instant/basic/index.html?appid=945c0976a09448cb93541f7f82aec066&locale=en"></iframe>
+        (The interactive map is being re-written. Please check back later.)
     </div>
     <!-- Introduction-->
     <section class="content-section bg-primary text-white" id="introduction">
@@ -68,7 +70,9 @@
     <section class="content-section p-5 bg-light" id="video">
         <div class="container text-center">
             <div class="embed-responsive embed-responsive-16by9 ratio ratio-16x9 overflow-visible">
-                <iframe class="overflow-hidden" src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7062117838756438016?compact=1" allowfullscreen="" title="Embedded post"></iframe>
+                <iframe class="overflow-hidden"
+                    src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7062117838756438016?compact=1" allowfullscreen=""
+                    title="Embedded post"></iframe>
             </div>
         </div>
     </section>
@@ -243,5 +247,9 @@
     <!-- Core theme JS-->
     <script src="js/scripts.js"></script>
 </body>
+<script>
+    // TODO: Add maplibre script here
+
+</script>
 
 </html>
