@@ -28,9 +28,10 @@
         rel="stylesheet" type="text/css" />
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="css/styles.css" rel="stylesheet" />
-    <!-- MapLibre GL JS -->
-    <script src=https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.js></script>
-    <link href=https://unpkg.com/maplibre-gl@3.2.1/dist/maplibre-gl.css rel="stylesheet" />
+    <!-- Mapbox GL JS -->
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
 </head>
 
 <body id="page-top">
@@ -248,7 +249,45 @@
     <script src="js/scripts.js"></script>
 </body>
 <script>
-    // TODO: Add maplibre script here
+    mapboxgl.accessToken = 'pk.eyJ1IjoicGhpbGlwbWF0aGlldSIsImEiOiJjajJjbTN3Z3QwMDJuMnFvNTJsZzczMDBnIn0.t9cNIZfiAeXR_SzdzyR6jg'
+    const map = new mapboxgl.Map({
+        container: 'map',
+        // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+        style: 'mapbox://styles/mapbox/light-v11',
+        zoom: 5.5,
+        center: [-69.5, 45.5],
+    });
+
+    map.on('load', () => {
+        map.addSource('ejblocks', {
+            type: 'vector',
+            url: 'mapbox://philipmathieu.0wnsx9f8'
+        });
+        map.addLayer(
+            {
+                'id': 'ejblocks-data',
+                'type': 'fill',
+                'source': 'ejblocks',
+                'source-layer': 'ejblocks',
+                'paint': {
+                    'fill-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'trip_time'],
+                        0, '#ffffcc',
+                        5, '#c2e699',
+                        10, '#78c679',
+                        15, '#31a354',
+                        20, '#006837'
+                    ],
+                    'fill-opacity': 0.5,
+                    'fill-outline-color': '#fff',
+                    'fill-antialias': false,
+
+                }
+            },
+        );
+    });
 
 </script>
 
