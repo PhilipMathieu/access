@@ -16,4 +16,6 @@ dependencies:
   - seaborn
   - cenpy
   - python-dotenv
-prefix: /home/philip/miniconda3/envs/ox
+  - geopandas
+  - dvc
+  - dvc-gdrive
