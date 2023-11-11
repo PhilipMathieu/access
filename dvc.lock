@@ -1,0 +1,58 @@
+schema: '2.0'
+stages:
+  download_graphs:
+    cmd: python src/download_graphs.py
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: 4869fc870d4f52b40c2b9fa60ce01dae
+      size: 1401
+    outs:
+    - path: data/OSM/CT_drive.graphml
+      hash: md5
+      md5: f7ef53b079094707eec2b7afdda427ff
+      size: 215436340
+    - path: data/OSM/CT_walk.graphml
+      hash: md5
+      md5: 7054303c4c46750d9d05fe884a0f7278
+      size: 861617437
+    - path: data/OSM/MA_drive.graphml
+      hash: md5
+      md5: a315ca5bed695e2a1a6b4503f9b073a3
+      size: 531636191
+    - path: data/OSM/MA_walk.graphml
+      hash: md5
+      md5: 10f7090ca4dd50cb80fc5296b38efdb6
+      size: 1544568886
+    - path: data/OSM/ME_drive.graphml
+      hash: md5
+      md5: 3e7462f011146a1f0937233f2101b9da
+      size: 205106824
+    - path: data/OSM/ME_walk.graphml
+      hash: md5
+      md5: a72a634accdf12ddcdc2c4dd9e873028
+      size: 523590575
+    - path: data/OSM/NH_drive.graphml
+      hash: md5
+      md5: d9251d6ff2ac0f071a27caf80da995f0
+      size: 164917091
+    - path: data/OSM/NH_walk.graphml
+      hash: md5
+      md5: c9e10353235973b94c40eb8bdb060ed5
+      size: 543321946
+    - path: data/OSM/RI_drive.graphml
+      hash: md5
+      md5: a04ee6776f27fd7f7673a6138696742b
+      size: 77647051
+    - path: data/OSM/RI_walk.graphml
+      hash: md5
+      md5: e2c4531dea9d8f82975254b459cfa030
+      size: 190085140
+    - path: data/OSM/VT_drive.graphml
+      hash: md5
+      md5: 3fbaf6afdbac25bb80d67dd986ec40d5
+      size: 119283723
+    - path: data/OSM/VT_walk.graphml
+      hash: md5
+      md5: a599d2a80027db5a5dff3a6058ffd7c1
+      size: 289351684
