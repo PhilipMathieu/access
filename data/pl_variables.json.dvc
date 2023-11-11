@@ -1,0 +1,5 @@
+outs:
+- md5: dc2bcc08bb59a28a762fb686c8db13df
+  size: 108496
+  hash: md5
+  path: pl_variables.json
