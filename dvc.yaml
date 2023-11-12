@@ -13,6 +13,12 @@ stages:
     - src/download_graphs.py
     outs:
     - data/OSM
+  download_ne_pos:
+    cmd: python src/download_ne_pos.py
+    deps:
+    - src/download_ne_pos.py
+    outs:
+    - data/Harvard
   graph_points:
     matrix:
       fips: ["09", "23", "25", "33", "44", "50"]
@@ -26,3 +32,30 @@ stages:
     - data/US Census/tl_2020_${item.fips}_tabblock20.zip
     outs:
     - data/US\ Census\ Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv
+  merge_graphs:
+    foreach:
+      - drive
+      - walk
+    do:
+      cmd: python src/merge_graphs.py data/OSM_NE/ne_${item}.graphml data/OSM/09_${item}.graphml data/OSM/23_${item}.graphml data/OSM/25_${item}.graphml data/OSM/33_${item}.graphml data/OSM/44_${item}.graphml data/OSM/50_${item}.graphml
+      deps:
+      - src/merge_graphs.py
+      - data/OSM/09_${item}.graphml
+      - data/OSM/23_${item}.graphml
+      - data/OSM/25_${item}.graphml
+      - data/OSM/33_${item}.graphml
+      - data/OSM/44_${item}.graphml
+      - data/OSM/50_${item}.graphml
+      outs:
+      - data/OSM_NE/ne_${item}.graphml
+  trip_times:
+    foreach:
+      - drive
+      - walk
+    do:
+      cmd: python src/trip_times.py data/OSM_NE/ne_${item}.graphml data/OSM_NE/ne_${item}_times.graphml
+      deps:
+      - src/trip_times.py
+      - data/OSM_NE/ne_${item}.graphml
+      outs:
+      - data/OSM_NE/ne_${item}_times.graphml
