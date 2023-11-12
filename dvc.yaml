@@ -7,12 +7,15 @@ stages:
     outs:
     - data/US Census
   download_graphs:
-    cmd: python src/download_graphs.py
+    matrix:
+        fips: ["09", "23", "25", "33", "44", "50"]
+        mode: [drive, walk]
+    cmd: python src/download_graphs.py --states ${item.fips} --network-types ${item.mode} 
     deps:
     - src/utils.py
     - src/download_graphs.py
     outs:
-    - data/OSM
+    - data/OSM/${item.fips}_${item.mode}.graphml
   download_ne_pos:
     cmd: python src/download_ne_pos.py
     deps:
