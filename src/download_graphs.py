@@ -22,4 +22,4 @@ for state in tqdm(STATES, desc="States"):
         # project the graph to UTM (zone calculated automatically) then plot it
         G = ox.project_graph(G)
         # save as graphml file
-        ox.save_graphml(G, filename=f"data/OSM/{state['FIPS']}_{network_type}.graphml")
+        ox.save_graphml(G, filepath=f"data/OSM/{state['FIPS']}_{network_type}.graphml")

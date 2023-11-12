@@ -2,6 +2,7 @@ import os
 import argparse
 import osmnx as ox
 import networkx as nx
+from tqdm.auto import tqdm
 
 
 def merge_graphs(graphs):
@@ -15,8 +16,9 @@ def merge_graphs(graphs):
     merged_graph (networkx.MultiDiGraph): A merged networkx graph.
     """
     merged_graph = nx.MultiDiGraph()
-    for graph in graphs:
-        merged_graph = nx.compose(merged_graph, graph)
+    for graph in tqdm(graphs, desc="Merging graphs"):
+        G = ox.load_graphml(graph)
+        merged_graph = nx.compose(merged_graph, G)
     return merged_graph
 
 
@@ -44,17 +46,8 @@ def main():
             print(f"{filename} is not a valid file path.")
             return
 
-    # Load the graphs
-    graphs = []
-    for filename in args.input_filenames:
-        graph = ox.load_graphml(filename)
-        graphs.append(graph)
-
-    # Merge the graphs
-    merged_graph = merge_graphs(graphs)
-
-    # Save the merged graph
-    ox.save_graphml(merged_graph, args.output_filename)
+    graph = merge_graphs(args.input_filenames)
+    ox.save_graphml(graph, args.output_filename)
 
 
 if __name__ == "__main__":
