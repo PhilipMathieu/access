@@ -1,18 +1,28 @@
 stages:
+  download_shps:
+    cmd: python src/download_shps.py
+    deps:
+    - src/utils.py
+    - src/download_shps.py
+    outs:
+    - data/US Census
   download_graphs:
     cmd: python src/download_graphs.py
     deps:
+    - src/utils.py
     - src/download_graphs.py
     outs:
-    - data/OSM/CT_drive.graphml
-    - data/OSM/CT_walk.graphml
-    - data/OSM/MA_drive.graphml
-    - data/OSM/MA_walk.graphml
-    - data/OSM/ME_drive.graphml
-    - data/OSM/ME_walk.graphml
-    - data/OSM/NH_drive.graphml
-    - data/OSM/NH_walk.graphml
-    - data/OSM/RI_drive.graphml
-    - data/OSM/RI_walk.graphml
-    - data/OSM/VT_drive.graphml
-    -  data/OSM/VT_walk.graphml
+    - data/OSM
+  graph_points:
+    matrix:
+      fips: ["09", "23", "25", "33", "44", "50"]
+      mode: [drive, walk]
+    cmd: python src/graph_points.py data/OSM/${item.fips}_${item.mode}.graphml data/US\
+      Census/tl_2020_${item.fips}_tabblock20.zip data/US\ Census\ Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv
+      --mode centroid
+    deps:
+    - src/graph_points.py
+    - data/OSM/${item.fips}_${item.mode}.graphml
+    - data/US Census/tl_2020_${item.fips}_tabblock20.zip
+    outs:
+    - data/US\ Census\ Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv

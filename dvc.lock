@@ -56,3 +56,20 @@ stages:
       hash: md5
       md5: a599d2a80027db5a5dff3a6058ffd7c1
       size: 289351684
+  download_shps:
+    cmd: python src/download_shps.py
+    deps:
+    - path: src/download_shps.py
+      hash: md5
+      md5: 2b3580612996f99ace648652275e9644
+      size: 907
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/US Census
+      hash: md5
+      md5: 02f76b87cb0a4e11d10c728d62158adc.dir
+      size: 411874888
+      nfiles: 6
