@@ -34,7 +34,7 @@ stages:
     - data/OSM/${item.fips}_${item.mode}.graphml
     - data/US Census/tl_2020_${item.fips}_tabblock20.zip
     outs:
-    - data/US\ Census\ Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv
+    - data/US Census Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv
   merge_graphs:
     foreach:
       - drive

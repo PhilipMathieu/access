@@ -44,13 +44,11 @@ if __name__ == "__main__":
         states = STATES
     else:
         states = []
-        for state in STATES:
-            if state['name'] in args.states:
-                states.append(state)
-            elif state['FIPS'] in args.states:
-                states.append(state)
-            else:
-                print(f"State {state['name']} not found in list of states.")
+        for state in args.states:
+            for state_dict in STATES:
+                if state_dict['name'] == state:
+                    states.append(state_dict)
+                    break
 
     if len(args.network_types) == 0:
         network_types = ["walk", "drive"]

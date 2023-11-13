@@ -5,7 +5,7 @@ import geopandas as gpd
 import argparse
 import logging
 from tqdm.auto import tqdm
-from multiprocessing import Pool
+from geopandas import sindex
 
 tqdm.pandas()
 
@@ -40,8 +40,10 @@ def polygon_to_nodes(G, polygon, fallback=False):
             G, polygon_bbox[1], polygon_bbox[0], polygon_bbox[3], polygon_bbox[2]
         )
         # find the nodes within the polygon
-        nodes = ox.graph_to_gdfs(G, edges=False)
-        nodes = nodes[nodes.intersects(polygon)].index.values.tolist()
+        gdf_nodes = ox.graph_to_gdfs(G, edges=False).reset_index()
+        nodes = gdf_nodes.loc[
+            gdf_nodes.sindex.intersects(polygon)
+        ].index.values.tolist()
     except Exception as e:
         print(f"Error: {e}")
         if fallback:
@@ -49,16 +51,6 @@ def polygon_to_nodes(G, polygon, fallback=False):
             nodes = polygon_to_nodes_brute_force(G, polygon)
         else:
             nodes = []
-    return nodes
-
-
-def polygon_to_nodes_brute_force(G, polygon):
-    """Find the graph nodes within a polygon using brute force."""
-    nodes = []
-    for node in G.nodes(data=True):
-        point = (node[1]["x"], node[1]["y"])
-        if polygon.contains(point):
-            nodes.append(node[0])
     return nodes
 
 
@@ -81,8 +73,19 @@ def polygon_to_centroid_node(G, polygon):
     # calculate the centroid of the polygon
     centroid = polygon.centroid
     # find the node closest to the centroid
-    node = ox.distance.nearest_nodes(G, centroid.x, centroid.y)
+    gdf_nodes = ox.graph_to_gdfs(G, edges=False).reset_index()
+    node = gdf_nodes.loc[gdf_nodes.sindex.nearest(centroid)][0]
     return node
+
+
+def polygon_to_nodes_brute_force(G, polygon):
+    """Find the graph nodes within a polygon using brute force."""
+    nodes = []
+    for node in G.nodes(data=True):
+        point = (node[1]["x"], node[1]["y"])
+        if polygon.contains(point):
+            nodes.append(node[0])
+    return nodes
 
 
 def gdf_to_nodes(
@@ -166,13 +169,7 @@ def gdf_to_nodes(
         elif mode == "centroid":
             return polygon_to_centroid_node(G, row["geometry"])
 
-    with Pool() as pool:
-        gdf["osmid"] = list(
-            tqdm(
-                pool.imap(apply_func, [row for _, row in gdf.iterrows()]),
-                total=len(gdf),
-            )
-        )
+    gdf["osmid"] = gdf.progress_apply(apply_func, axis=1)
 
     if nodes_only:
         return gdf["osmid"]
