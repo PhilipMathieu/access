@@ -23,20 +23,6 @@ stages:
     - src/download_ne_pos.py
     outs:
     - data/Harvard
-  graph_points:
-    matrix:
-      fips: ["09", "23", "25", "33", "44", "50"]
-      mode: [drive, walk]
-    cmd: python src/graph_points.py data/OSM/${item.fips}_${item.mode}.graphml data/US\
-      Census/tl_2020_${item.fips}_tabblock20.zip data/US\ Census\ Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv
-      --mode centroid
-    deps:
-    - src/graph_points.py
-    - data/OSM/${item.fips}_${item.mode}.graphml
-    - data/US Census/tl_2020_${item.fips}_tabblock20.zip
-    outs:
-    - data/US Census Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv:
-        persist: true
   merge_graphs:
     foreach:
       - drive
@@ -54,6 +40,20 @@ stages:
       outs:
       - data/OSM_NE/ne_${item}.graphml:
           persist: true
+  graph_points:
+    matrix:
+      fips: ["09", "23", "25", "33", "44", "50"]
+      mode: [drive, walk]
+    cmd: python src/graph_points.py data/OSM_NE/ne_${item.mode}.graphml data/US\
+      Census/tl_2020_${item.fips}_tabblock20.zip data/US\ Census\ Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv
+      --mode centroid
+    deps:
+    - src/graph_points.py
+    - data/OSM_NE/ne_${item.mode}.graphml
+    - data/US Census/tl_2020_${item.fips}_tabblock20.zip
+    outs:
+    - data/US Census Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv:
+        persist: true
   trip_times:
     foreach:
       - drive
