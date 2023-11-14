@@ -15,7 +15,8 @@ stages:
     - src/utils.py
     - src/download_graphs.py
     outs:
-    - data/OSM/${item.fips}_${item.mode}.graphml
+    - data/OSM/${item.fips}_${item.mode}.graphml:
+        persist: true
   download_ne_pos:
     cmd: python src/download_ne_pos.py
     deps:
@@ -34,7 +35,8 @@ stages:
     - data/OSM/${item.fips}_${item.mode}.graphml
     - data/US Census/tl_2020_${item.fips}_tabblock20.zip
     outs:
-    - data/US Census Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv
+    - data/US Census Nodes/tl_2020_${item.fips}_tabblock20_nodes_${item.mode}.csv:
+        persist: true
   merge_graphs:
     foreach:
       - drive
@@ -50,7 +52,8 @@ stages:
       - data/OSM/44_${item}.graphml
       - data/OSM/50_${item}.graphml
       outs:
-      - data/OSM_NE/ne_${item}.graphml
+      - data/OSM_NE/ne_${item}.graphml:
+          persist: true
   trip_times:
     foreach:
       - drive
@@ -61,4 +64,5 @@ stages:
       - src/trip_times.py
       - data/OSM_NE/ne_${item}.graphml
       outs:
-      - data/OSM_NE/ne_${item}_times.graphml
+      - data/OSM_NE/ne_${item}_times.graphml:
+          persist: true

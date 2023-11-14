@@ -10,6 +10,8 @@ return_code = subprocess.call(
         "-nc",
         "-P",
         "data/Harvard/",
+        "-O",
+        "NE_POS_v1-2_SHP.zip"
         "https://zenodo.org/records/7764284/files/NE_POS_v1-2_SHP.zip?download=1",
     ]
 )

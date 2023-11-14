@@ -73,3 +73,208 @@ stages:
       md5: 02f76b87cb0a4e11d10c728d62158adc.dir
       size: 411874888
       nfiles: 6
+  download_graphs@09-drive:
+    cmd: python src/download_graphs.py --states 09 --network-types drive
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/09_drive.graphml
+      hash: md5
+      md5: cefdeff6b9bd26591293bdbd23ac25a2
+      size: 215585241
+  download_graphs@09-walk:
+    cmd: python src/download_graphs.py --states 09 --network-types walk
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/09_walk.graphml
+      hash: md5
+      md5: 999155a11024bb078ca18a10835768b1
+      size: 862431649
+  download_graphs@23-drive:
+    cmd: python src/download_graphs.py --states 23 --network-types drive
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/23_drive.graphml
+      hash: md5
+      md5: 45f3258c9699efd4c976759c1b9d5b10
+      size: 205110497
+  download_graphs@23-walk:
+    cmd: python src/download_graphs.py --states 23 --network-types walk
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/23_walk.graphml
+      hash: md5
+      md5: 23a3903c7dc282f9d75dde05377b4f17
+      size: 523930803
+  download_graphs@25-drive:
+    cmd: python src/download_graphs.py --states 25 --network-types drive
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/25_drive.graphml
+      hash: md5
+      md5: b8cedbc46fc2cf2944fede9fbcec8937
+      size: 531660724
+  download_graphs@25-walk:
+    cmd: python src/download_graphs.py --states 25 --network-types walk
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/25_walk.graphml
+      hash: md5
+      md5: 75c6f513ece892face7e8fd264b9b6e0
+      size: 1545107824
+  download_graphs@33-drive:
+    cmd: python src/download_graphs.py --states 33 --network-types drive
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/33_drive.graphml
+      hash: md5
+      md5: dcb14a52c6605f97f470a808abf9771a
+      size: 164924860
+  download_graphs@33-walk:
+    cmd: python src/download_graphs.py --states 33 --network-types walk
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/33_walk.graphml
+      hash: md5
+      md5: d8ea3291e8d344da6cd773e51f3dd1c6
+      size: 543565730
+  download_graphs@44-drive:
+    cmd: python src/download_graphs.py --states 44 --network-types drive
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/44_drive.graphml
+      hash: md5
+      md5: bcdcef2aef51c9aa78fc02e0fdf8ce9c
+      size: 77647183
+  download_graphs@44-walk:
+    cmd: python src/download_graphs.py --states 44 --network-types walk
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/44_walk.graphml
+      hash: md5
+      md5: a02ae3a6621fd30ee4c6aa6bccb1cda1
+      size: 190094155
+  download_graphs@50-drive:
+    cmd: python src/download_graphs.py --states 50 --network-types drive
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/50_drive.graphml
+      hash: md5
+      md5: c0ef429a7c44d070325767fc061afd12
+      size: 119282980
+  download_graphs@50-walk:
+    cmd: python src/download_graphs.py --states 50 --network-types walk
+    deps:
+    - path: src/download_graphs.py
+      hash: md5
+      md5: aa3137c0c267b2626b9c5631d7d9620b
+      size: 1944
+    - path: src/utils.py
+      hash: md5
+      md5: 4734089705bb9e3189a3326bfe8edb01
+      size: 727
+    outs:
+    - path: data/OSM/50_walk.graphml
+      hash: md5
+      md5: c45769636d62a63019715d73fe60981a
+      size: 289378254
+  download_ne_pos:
+    cmd: python src/download_ne_pos.py
+    deps:
+    - path: src/download_ne_pos.py
+      hash: md5
+      md5: 610686b945884217026cd6220b48228e
+      size: 447
+    outs:
+    - path: data/Harvard
+      hash: md5
+      md5: 89febcbf68581454e1a0f18d95e9dd33.dir
+      size: 116390697
+      nfiles: 1
