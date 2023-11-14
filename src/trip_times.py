@@ -2,6 +2,7 @@ import os
 import argparse
 import osmnx as ox
 import networkx as nx
+from tqdm.auto import tqdm
 
 
 def add_trip_times(G, speed=4.5):
@@ -21,7 +22,7 @@ def add_trip_times(G, speed=4.5):
         Input graph with trip times added to each edge.
     """
     # Calculate time to traverse each edge
-    for u, v, k, data in G.edges(keys=True, data=True):
+    for u, v, k, data in tqdm(G.edges(keys=True, data=True)):
         # Calculate distance in km
         dist = data["length"] / 1000
         # Calculate time in hours
@@ -76,12 +77,15 @@ def main():
         return
 
     # Load the graph
+    print("Loading graph...")
     G = ox.load_graphml(args.input_filename)
 
     # Add trip times
+    print("Adding trip times...")
     G = add_trip_times(G)
 
     # Save the graph
+    print("Saving graph...")
     ox.save_graphml(G, args.output_filename)
 
 
