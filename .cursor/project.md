@@ -25,7 +25,7 @@ access/
 │   ├── 4/                 # Statistical analysis
 │   ├── 5/                 # Figure generation
 │   └── 6-6d/              # H3 hexagon analysis and joins
-├── data/                   # Data files (managed with DVC)
+├── data/                   # Data files (managed with Git LFS)
 ├── docs/                   # Documentation website (HTML)
 ├── figs/                   # Generated figures
 ├── cache/                  # OSMnx cache directory
@@ -53,7 +53,7 @@ access/
 - Virtual environment: `.venv/` (created with `uv venv`)
 
 ### Data Version Control
-- **DVC**: Data files in `data/` are managed with DVC (see `.dvc` files)
+- **Git LFS**: Data files in `data/` are managed with Git LFS (see `.gitattributes`)
 
 ## Methodology
 
@@ -80,7 +80,7 @@ The analysis follows this workflow:
 - **Climate Equity and Justice Screening Tool (CEJST)**: Disadvantaged community identification
 
 ### Data Storage
-- Data files are managed with DVC (Data Version Control)
+- Data files are managed with Git LFS (Git Large File Storage)
 - OSMnx caches network graphs in `./cache/`
 - Large datasets stored in `data/` directory
 
@@ -166,8 +166,8 @@ The notebooks follow a numbered sequence:
    ```
 
 ### Data Setup
-- Data files are managed with DVC
-- Pull data with: `dvc pull`
+- Data files are managed with Git LFS
+- Pull data with: `git lfs pull` (or `git clone` will automatically pull LFS files)
 - OSMnx will cache network graphs automatically in `./cache/`
 
 ### Running Scripts
@@ -201,7 +201,7 @@ The notebooks follow a numbered sequence:
 - Project uses `uv` for environment and package management
 - Virtual environment: `.venv/` (created with `uv venv`)
 - OSMnx cache stored in `./cache/` (gitignored)
-- Large data files managed with DVC
+- Large data files managed with Git LFS
 - Analysis focuses on Maine state
 - Primary analysis unit: Census blocks
 - Key equity metric: CEJST disadvantaged community designation

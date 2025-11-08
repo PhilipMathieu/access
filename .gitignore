@@ -160,3 +160,13 @@ cython_debug/
 #.idea/
 
 cache/*
+notebooks/cache/*
+
+# Data source metadata (generated files)
+data/data_source_metadata.json
+data/schema_versions.json
+data/CHANGELOG.json
+data/notifications.json
+data/update_log.txt
+data/processing_log.txt
+data/validation_log.txt
