@@ -16,6 +16,42 @@ The data dictionary includes:
 - File naming conventions
 - Troubleshooting guides
 
+## Environment Setup
+
+This project uses `uv` for Python environment and package management.
+
+### Prerequisites
+
+1. Install `uv` (if not already installed):
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+2. Install Python 3.10 (if needed):
+   ```bash
+   uv python install 3.10
+   ```
+
+### Setup
+
+1. Create virtual environment and install dependencies:
+   ```bash
+   uv venv
+   source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
+   uv pip install -e .
+   ```
+
+2. Set up Jupyter kernel (for notebooks):
+   ```bash
+   # Make sure the venv is activated first
+   source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
+   
+   # Register the kernel using the venv python
+   .venv/bin/python -m ipykernel install --user --name access --display-name "Python 3 (access)"
+   ```
+
+The notebooks in the `notebooks/` directory should use the "Python 3 (access)" kernel, which will use the Python interpreter from `.venv/bin/python`.
+
 ## Local Development
 
 To test the site locally before deploying to GitHub Pages, use `http-server` which supports HTTP range requests required for PMTiles:
