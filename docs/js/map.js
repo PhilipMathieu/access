@@ -117,19 +117,22 @@ map.on('load', () => {
     map.addSource('blocks', {
         type: 'vector',
         url: 'pmtiles://./data/blocks.pmtiles',
-        attribution: '© US Census Bureau'
+        attribution: '© US Census Bureau',
+        buffer: 256  // Increase buffer to help reduce gaps between polygons (default is 128)
     });
 
     map.addSource('conserved-lands', {
         type: 'vector',
         url: 'pmtiles://./data/conserved_lands.pmtiles',
-        attribution: '© Maine GeoLibrary'
+        attribution: '© Maine GeoLibrary',
+        buffer: 256  // Increase buffer to help reduce gaps between polygons
     });
 
     map.addSource('cejst', {
         type: 'vector',
         url: 'pmtiles://./data/cejst.pmtiles',
-        attribution: '© Climate Equity and Justice Screening Tool'
+        attribution: '© Climate Equity and Justice Screening Tool',
+        buffer: 256  // Increase buffer to help reduce gaps between polygons
     });
 
     // Add Census blocks layer with clear walk times
@@ -173,7 +176,7 @@ map.on('load', () => {
         'source-layer': 'blocks',
         paint: {
             'line-color': '#508142',
-            'line-width': 0.5,
+            'line-width': 1.0,  // Increased from 0.5 to help mask small gaps
             'line-opacity': 0.3
         }
     });

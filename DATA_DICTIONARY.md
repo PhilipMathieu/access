@@ -20,7 +20,7 @@ These are the files used by the interactive webmap (`docs/index.html`). **Update
 
 | File | Source | Description | Update Command |
 |------|--------|-------------|----------------|
-| `blocks.pmtiles` | `data/blocks/*_with_nodes.shp.zip` | Census blocks with walk times and OSMnx node IDs | See [Blocks Workflow](#blocks-workflow) |
+| `blocks.pmtiles` | `data/joins/block_dissolve.shp.zip` | Census blocks with walk times (AC_* fields) and OSMnx node IDs | See [Blocks Workflow](#blocks-workflow) |
 | `conserved_lands.pmtiles` | `data/conserved_lands/*_with_nodes.shp.zip` | Maine conserved lands with OSMnx node IDs | See [Conserved Lands Workflow](#conserved-lands-workflow) |
 | `cejst.pmtiles` | `data/cejst-maine.shp` | CEJST disadvantaged communities (Maine only) | See [CEJST Workflow](#cejst-workflow) |
 
@@ -33,7 +33,7 @@ To update the webmap with new data:
 3. **Generate PMTiles**:
    ```bash
    # Blocks
-   python src/convert_to_pmtiles.py data/blocks/*_with_nodes.shp.zip docs/data/blocks.pmtiles -l blocks
+   python src/convert_to_pmtiles.py data/joins/block_dissolve.shp.zip docs/data/blocks.pmtiles -l blocks
    
    # Conserved Lands
    python src/convert_to_pmtiles.py data/conserved_lands/*_with_nodes.shp.zip docs/data/conserved_lands.pmtiles -l conserved_lands
@@ -183,13 +183,21 @@ These are intermediate files created during data processing. They include additi
    python src/find_centroids.py -g data/graphs/maine_walk.graphml data/blocks/tl_2020_23_tabblock20.shp
    ```
 
-3. **Generate PMTiles for webmap**:
+3. **Calculate walk times** (in `notebooks/1b walk_times_blocks.ipynb`):
+   - This creates `data/walk_times/walk_times_block_df.csv`
+
+4. **Merge blocks with walk times** (in `notebooks/2 merge_blocks.ipynb`):
+   - This creates `data/joins/block_dissolve.shp.zip` with `AC_*` fields (acres accessible within each time period)
+
+5. **Generate PMTiles for webmap**:
    ```bash
-   python src/convert_to_pmtiles.py data/blocks/*_with_nodes.shp.zip docs/data/blocks.pmtiles -l blocks
+   python src/convert_to_pmtiles.py data/joins/block_dissolve.shp.zip docs/data/blocks.pmtiles -l blocks
    ```
 
 **Output Files**:
-- `data/blocks/*_with_nodes.shp.zip` (processed blocks)
+- `data/blocks/*_with_nodes.shp.zip` (processed blocks with node IDs)
+- `data/walk_times/walk_times_block_df.csv` (walk time calculations)
+- `data/joins/block_dissolve.shp.zip` (blocks with AC_* fields - **use this for webmap**)
 - `docs/data/blocks.pmtiles` (webmap file)
 
 ### Conserved Lands Workflow
@@ -253,7 +261,7 @@ If you only need to update the webmap with existing processed data:
 
 ```bash
 # Blocks
-python src/convert_to_pmtiles.py data/blocks/*_with_nodes.shp.zip docs/data/blocks.pmtiles -l blocks
+python src/convert_to_pmtiles.py data/joins/block_dissolve.shp.zip docs/data/blocks.pmtiles -l blocks
 
 # Conserved Lands
 python src/convert_to_pmtiles.py data/conserved_lands/*_with_nodes.shp.zip docs/data/conserved_lands.pmtiles -l conserved_lands
@@ -284,7 +292,7 @@ If you need to update everything from source:
 4. **Generate PMTiles for webmap**:
    ```bash
    # Blocks
-   python src/convert_to_pmtiles.py data/blocks/*_with_nodes.shp.zip docs/data/blocks.pmtiles -l blocks
+   python src/convert_to_pmtiles.py data/joins/block_dissolve.shp.zip docs/data/blocks.pmtiles -l blocks
    
    # Conserved Lands
    python src/convert_to_pmtiles.py data/conserved_lands/*_with_nodes.shp.zip docs/data/conserved_lands.pmtiles -l conserved_lands

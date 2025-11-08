@@ -96,6 +96,8 @@ def convert_to_pmtiles(
         "tippecanoe",
         "-zg",  # Automatic zoom level calculation
         f"--projection={projection}",
+        "--detect-shared-borders",  # Preserve shared boundaries between adjacent polygons
+        "--buffer=10",  # Increase buffer size to maintain polygon continuity (default is 5)
         "-o", str(output_path),
         "-l", layer_name,
         str(geojson_path)

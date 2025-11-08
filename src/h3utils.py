@@ -4,12 +4,37 @@ import matplotlib
 import h3pandas
 from jsonschema import validate
 import json
+from pathlib import Path
+from typing import Optional
+
+try:
+    from .config.defaults import DEFAULT_H3_RESOLUTION
+    from .config.regions import RegionConfig
+except ImportError:
+    # Fallback for when imported as standalone module
+    DEFAULT_H3_RESOLUTION = 6
+    RegionConfig = None
 
 # Merge a dataframe with a relationship file. If no relationship file is provided,
 # default to the resolution 6 file.
-def h3_merge(df, reln=None, inplace=False):
+def h3_merge(df, reln=None, inplace=False, resolution=None, region_config=None):
+    """Merge a dataframe with an H3 relationship file.
+    
+    Args:
+        df: DataFrame to merge
+        reln: Optional relationship DataFrame (if None, loads from default path)
+        inplace: If True, modify df in place
+        resolution: H3 resolution (default: 6)
+        region_config: Optional RegionConfig for constructing default path
+    """
     if reln is None:
-        reln = pd.read_csv('../data/blocks/tl_2020_23_tabblock20_h3_6.csv', converters={
+        if region_config:
+            reln_path = region_config.data_root / "blocks" / f"tl_2020_{region_config.state_fips}_tabblock20_h3_{resolution or DEFAULT_H3_RESOLUTION}.csv"
+        else:
+            # Default to Maine for backward compatibility
+            reln_path = Path('../data/blocks/tl_2020_23_tabblock20_h3_6.csv')
+        
+        reln = pd.read_csv(str(reln_path), converters={
                 'GEOID20':str,
                 'h3_fraction':float,
                 'h3id':str
