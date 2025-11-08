@@ -28,6 +28,8 @@
         rel="stylesheet" type="text/css" />
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="css/styles.css" rel="stylesheet" />
+    <!-- MapLibre GL JS CSS -->
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
 </head>
 
 <body id="page-top">
@@ -45,12 +47,8 @@
         </ul>
     </nav>
     <!-- Map-->
-    <div class="map" id="map">
-        <p class="lead p-5 text-center">
-            The map is temporarily down for maintenance while I transition from ESRI to open source mapping libraries. Please <a href="mailto:philip.eng.mathieu@gmail.com">contact me</a> for an offline copy of the data set.
-        </p>
-<!--         <iframe
-            src="https://pmathieu.maps.arcgis.com/apps/instant/basic/index.html?appid=945c0976a09448cb93541f7f82aec066&locale=en"></iframe> -->
+    <div class="map">
+        <div id="map"></div>
     </div>
     <!-- Introduction-->
     <section class="content-section bg-primary text-white" id="introduction">
@@ -243,8 +241,14 @@
     <a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
     <!-- Bootstrap core JS-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- MapLibre GL JS -->
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <!-- PMTiles -->
+    <script src="https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js"></script>
     <!-- Core theme JS-->
     <script src="js/scripts.js"></script>
+    <!-- Map JS-->
+    <script src="js/map.js"></script>
 </body>
 
 </html>

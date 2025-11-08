@@ -233,28 +233,33 @@ def update_osmnx_graphs(name: str, config: Dict) -> bool:
 
 
 def update_cejst(name: str, config: Dict) -> bool:
-    """Update CEJST data."""
-    # Try alternative URLs first
-    alternative_urls = config.get("alternative_urls", [])
-    local_path = config.get("local_path", "data/cejst-me.zip")
+    """Update CEJST data - downloads full US shapefile."""
+    url = config.get("url")
+    local_path = config.get("local_path", "data/cejst-us.zip")
     local_file = Path(local_path)
     
-    # Try API endpoint first
-    for alt_url in alternative_urls:
-        if "api/v1/cejst/download-file" in alt_url:
-            logging.info(f"Trying CEJST API endpoint: {alt_url}")
-            if download_file(alt_url, local_file):
-                # Update metadata
-                metadata = load_metadata()
-                source_metadata = metadata.get(name, {})
-                source_metadata["local_date"] = datetime.now().isoformat()
-                source_metadata["update_available"] = False
-                source_metadata["last_updated"] = datetime.now().isoformat()
-                metadata[name] = source_metadata
-                save_metadata(metadata)
-                return True
+    if not url:
+        logging.error(f"{name}: No URL specified")
+        return False
     
-    logging.warning(f"{name}: Could not download from API endpoints. May require manual download.")
+    # Download the full US shapefile
+    logging.info(f"Downloading CEJST full US shapefile from {url}")
+    if download_file(url, local_file):
+        # Extract the zip file
+        extract_dir = local_file.parent / local_file.stem
+        if extract_zip(local_file, extract_dir):
+            logging.info(f"{name}: Successfully downloaded and extracted full US shapefile")
+            # Update metadata
+            metadata = load_metadata()
+            source_metadata = metadata.get(name, {})
+            source_metadata["local_date"] = datetime.now().isoformat()
+            source_metadata["update_available"] = False
+            source_metadata["last_updated"] = datetime.now().isoformat()
+            metadata[name] = source_metadata
+            save_metadata(metadata)
+            return True
+    
+    logging.error(f"{name}: Failed to download CEJST shapefile")
     return False
 
 
@@ -265,7 +270,11 @@ def update_data_source(name: str, config: Dict) -> bool:
     logging.info(f"Updating {name} ({source_type})...")
     
     if source_type == "http":
-        return update_census_tiger_line(name, config)
+        # Check if this is CEJST data source
+        if "CEJST" in name:
+            return update_cejst(name, config)
+        else:
+            return update_census_tiger_line(name, config)
     elif source_type == "arcgis":
         return update_arcgis_service(name, config)
     elif source_type == "osmnx":

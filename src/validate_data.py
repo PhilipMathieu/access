@@ -385,7 +385,7 @@ def validate_all_data_sources() -> Dict[str, Dict]:
         "Census TIGER/Line Blocks": Path("data/blocks"),
         "Census TIGER/Line Tracts": Path("data/tracts"),
         "Maine GeoLibrary Conserved Lands": Path("data/conserved_lands"),
-        "CEJST (Climate Equity and Justice Screening Tool)": Path("data/cejst-me.zip"),
+        "CEJST (Climate Equity and Justice Screening Tool)": Path("data/cejst-us"),
         "Census Relationship File": Path("data/tab2010_tab2020_st23_me.txt")
     }
     
@@ -454,7 +454,7 @@ def main():
             "Census TIGER/Line Blocks": Path("data/blocks"),
             "Census TIGER/Line Tracts": Path("data/tracts"),
             "Maine GeoLibrary Conserved Lands": Path("data/conserved_lands"),
-            "CEJST (Climate Equity and Justice Screening Tool)": Path("data/cejst-me.zip"),
+            "CEJST (Climate Equity and Justice Screening Tool)": Path("data/cejst-maine.shp"),
             "Census Relationship File": Path("data/tab2010_tab2020_st23_me.txt")
         }
         

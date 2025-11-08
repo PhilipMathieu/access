@@ -122,13 +122,14 @@ DATA_SOURCES = {
     },
     "CEJST (Climate Equity and Justice Screening Tool)": {
         "type": "http",
-        "url": "https://screeningtool.geoplatform.gov/",
+        "url": "https://dblew8dgr6ajz.cloudfront.net/data-versions/2.0/data/score/downloadable/2.0-shapefile-codebook.zip",
         "alternative_urls": [
+            "https://public-environmental-data-partners.github.io/j40-cejst-2/en/downloads",
             "https://screeningtool.geoplatform.gov/api/v1/cejst/download-file/state/me",
             "https://screeningtool.geoplatform.gov/api/v1/cejst/download-file/state/ME"
         ],
-        "local_path": "data/cejst-me.zip",
-        "description": "CEJST website - data download may require manual access or API endpoint"
+        "local_path": "data/cejst-us.zip",
+        "description": "CEJST Version 2.0 shapefile covering all US census tracts from public-environmental-data-partners.github.io/j40-cejst-2"
     }
 }
 

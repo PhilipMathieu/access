@@ -12792,18 +12792,109 @@ footer.footer .social-link:hover {
 }
 
 .map {
-  height: 75%;
+  height: 75vh;
+  width: 100%;
+  position: relative;
 }
 
-.map iframe {
+.map #map {
   height: 100%;
   width: 100%;
-  border: 0;
+}
+
+.map .lead {
+  display: none;
+}
+
+/* Map Legend */
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 1000;
+  max-width: 250px;
+  font-size: 0.9rem;
+}
+
+.map-legend h5 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+}
+
+/* Layer Toggle */
+.layer-toggle {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 1000;
+  max-width: 200px;
+  font-size: 0.9rem;
+}
+
+.layer-toggle h5 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.layer-toggle label {
+  display: block;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.layer-toggle input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+/* Popup styling */
+.popup-content {
+  font-size: 0.9rem;
+}
+
+.popup-content h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.popup-content p {
+  margin: 5px 0;
 }
 
 @media (max-width: 992px) {
   .map {
-    height: 75%;
+    height: 75vh;
+  }
+  
+  .map-legend,
+  .layer-toggle {
+    font-size: 0.8rem;
+    padding: 10px;
+    max-width: 180px;
   }
 }
 
