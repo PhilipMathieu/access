@@ -1,5 +1,6 @@
 """Block analysis with census and CEJST data."""
 
+import hashlib
 import logging
 from pathlib import Path
 from typing import List, Optional, Union
@@ -15,30 +16,103 @@ from config.regions import RegionConfig, get_region_config
 logger = logging.getLogger(__name__)
 
 
+def _get_cache_path(
+    state_fips: str,
+    fields: List[str],
+    year: int,
+    cache_dir: Optional[Union[str, Path]] = None,
+) -> Path:
+    """Get cache file path for census data.
+    
+    Args:
+        state_fips: State FIPS code
+        fields: List of census field names
+        year: Census year
+        cache_dir: Optional cache directory (default: data/cache/census)
+        
+    Returns:
+        Path to cache file
+    """
+    if cache_dir is None:
+        # Default to data/cache/census relative to project root
+        project_root = Path(__file__).parent.parent.parent
+        cache_dir = project_root / "data" / "cache" / "census"
+    else:
+        cache_dir = Path(cache_dir)
+    
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Create cache key from parameters
+    fields_str = "_".join(sorted(fields))
+    cache_key = f"{state_fips}_{year}_{fields_str}"
+    # Use hash to avoid filesystem issues with long filenames
+    cache_hash = hashlib.md5(cache_key.encode()).hexdigest()
+    
+    return cache_dir / f"census_{cache_hash}.parquet"
+
+
 def fetch_census_data(
-    api_key: str,
-    state_fips: Union[str, int],
+    api_key: Optional[str] = None,
+    state_fips: Union[str, int] = None,
     fields: Optional[List[str]] = None,
     year: int = DEFAULT_CENSUS_YEAR,
     region_config: Optional[RegionConfig] = None,
+    cache_dir: Optional[Union[str, Path]] = None,
+    refresh_cache: bool = False,
 ) -> pd.DataFrame:
     """Retrieve census data for blocks.
     
+    This function uses caching to reduce API key dependency. On first run with
+    an API key, data is fetched and cached. Subsequent runs can use cached data
+    without an API key.
+    
     Args:
-        api_key: Census API key
+        api_key: Census API key (optional if cached data exists)
         state_fips: State FIPS code (e.g., "23" for Maine)
         fields: List of census field names (default: P1_001N, P1_003N, P2_001N, P2_002N)
         year: Census year (default: 2020)
-        region_config: Optional region configuration (currently unused but reserved for future)
+        region_config: Optional region configuration (used to get state_fips if provided)
+        cache_dir: Optional cache directory (default: data/cache/census)
+        refresh_cache: If True, force refresh from API even if cache exists
         
     Returns:
         DataFrame with census data and GEOID20 column
+        
+    Raises:
+        ValueError: If neither api_key nor cached data is available
     """
     if fields is None:
         fields = DEFAULT_CENSUS_FIELDS
     
+    # Get state_fips from region_config if provided
+    if region_config:
+        state_fips = region_config.state_fips
+    elif state_fips is None:
+        raise ValueError("Either state_fips or region_config must be provided")
+    
     # Ensure state_fips is string with leading zero
     state_fips = str(state_fips).zfill(2)
+    
+    # Get cache path
+    cache_path = _get_cache_path(state_fips, fields, year, cache_dir)
+    
+    # Try to load from cache if not refreshing
+    if not refresh_cache and cache_path.exists():
+        logger.info(f"Loading census data from cache: {cache_path}")
+        try:
+            cached_data = pd.read_parquet(cache_path)
+            logger.info(f"Loaded {len(cached_data)} census records from cache")
+            return cached_data
+        except Exception as e:
+            logger.warning(f"Failed to load cache: {e}. Fetching from API...")
+    
+    # Need to fetch from API
+    if not api_key:
+        raise ValueError(
+            "No API key provided and no cached data found. "
+            "Either provide an API key or ensure cached data exists. "
+            f"Cache location: {cache_path}"
+        )
     
     logger.info(f"Fetching census data for state FIPS: {state_fips}")
     logger.info(f"Fields: {fields}")
@@ -48,13 +122,13 @@ def fetch_census_data(
     # Build field list with GEO_ID
     census_fields = ['GEO_ID'] + fields
     
+    # Use get method for block-level data (state_county_block method doesn't exist)
+    # The get method automatically calls _switch_endpoints to set the correct URL
+    # Query format: for=block:*&in=state:XX county:*
     me_census = pd.DataFrame.from_records(
-        c.pl.state_county_block(
-            fields=tuple(census_fields),
-            state_fips=state_fips,
-            county_fips="*",
-            blockgroup="*",
-            block="*",
+        c.pl.get(
+            fields=census_fields,
+            geo={'for': 'block:*', 'in': f'state:{state_fips} county:*'},
             year=year
         )
     )
@@ -63,6 +137,13 @@ def fetch_census_data(
     me_census["GEOID20"] = me_census["GEO_ID"].apply(lambda s: s[9:])
     
     logger.info(f"Retrieved {len(me_census)} census records")
+    
+    # Save to cache
+    logger.info(f"Caching census data to: {cache_path}")
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    me_census.to_parquet(cache_path)
+    logger.info("Census data cached successfully")
+    
     return me_census
 
 
@@ -203,12 +284,13 @@ def calculate_demographics(blocks_df: pd.DataFrame) -> pd.DataFrame:
 
 def create_ejblocks(
     blocks_path: Union[str, Path],
-    census_api_key: str,
-    cejst_path: Union[str, Path],
-    relationship_file_path: Union[str, Path],
-    output_path: Union[str, Path],
+    census_api_key: Optional[str] = None,
+    cejst_path: Union[str, Path] = None,
+    relationship_file_path: Union[str, Path] = None,
+    output_path: Union[str, Path] = None,
     state_fips: Optional[Union[str, int]] = None,
     region_config: Optional[RegionConfig] = None,
+    refresh_cache: bool = False,
 ) -> gpd.GeoDataFrame:
     """Create ejblocks dataset with all merged data.
     
@@ -217,12 +299,13 @@ def create_ejblocks(
     
     Args:
         blocks_path: Path to blocks shapefile (with walk times merged)
-        census_api_key: Census API key
+        census_api_key: Census API key (optional if cached data exists)
         cejst_path: Path to CEJST shapefile (2010 geography)
         relationship_file_path: Path to Census relationship file
         output_path: Path to save final ejblocks shapefile
         state_fips: State FIPS code (required if region_config not provided)
         region_config: Optional region configuration (used to get state_fips if provided)
+        refresh_cache: If True, force refresh census data from API even if cache exists
         
     Returns:
         GeoDataFrame with all merged data
@@ -245,9 +328,14 @@ def create_ejblocks(
     blocks["GEOID_grp"] = blocks["GEOID20"].apply(lambda s: s[:-3])
     blocks["GEOID_tract"] = blocks["GEOID20"].apply(lambda s: s[:-4])
     
-    # Fetch census data
+    # Fetch census data (will use cache if available)
     logger.info("Fetching census data")
-    census_data = fetch_census_data(census_api_key, state_fips)
+    census_data = fetch_census_data(
+        api_key=census_api_key,
+        state_fips=state_fips,
+        region_config=region_config,
+        refresh_cache=refresh_cache,
+    )
     
     # Merge census data
     logger.info("Merging census data")

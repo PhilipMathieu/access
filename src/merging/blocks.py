@@ -132,11 +132,13 @@ def create_trip_time_columns(
     """Create AC_* columns for each trip time.
     
     Creates columns like AC_5, AC_10, etc. containing acres of conserved land
-    accessible within that trip time threshold.
+    accessible within that trip time threshold. Columns are cumulative - AC_5
+    includes all lands accessible within 5 minutes, AC_10 includes all within
+    10 minutes, etc.
     
     Args:
         merge_df: GeoDataFrame with trip_time and acres columns
-        trip_times: List of trip time thresholds in minutes
+        trip_times: List of trip time thresholds in minutes (should be sorted)
         acres_col: Name of column containing acres (default: "CALC_AC")
         
     Returns:
@@ -144,12 +146,18 @@ def create_trip_time_columns(
     """
     merge_df = merge_df.copy()  # Avoid SettingWithCopyWarning
     
+    # Ensure trip_times are sorted
+    trip_times = sorted(trip_times)
+    
     for time in trip_times:
         col_name = f"AC_{time}"
-        # Copy acres column
-        merge_df[col_name] = merge_df[acres_col]
-        # Set to NA for non-matching times
-        merge_df.loc[merge_df["trip_time"] != time, col_name] = pd.NA
+        # Include all conserved lands accessible within this time threshold
+        # (trip_time <= time means accessible within this threshold)
+        # Initialize column with 0.0
+        merge_df[col_name] = 0.0
+        # Set to acres value where trip_time <= time
+        mask = merge_df["trip_time"] <= time
+        merge_df.loc[mask, col_name] = merge_df.loc[mask, acres_col]
     
     return merge_df
 
@@ -161,6 +169,11 @@ def dissolve_blocks(
 ) -> gpd.GeoDataFrame:
     """Aggregate blocks by dissolving on a groupby column.
     
+    Optimized to handle large datasets by:
+    1. Separating geometry operations from data aggregation
+    2. Using unique geometries per group (blocks with same GEOID20 have same geometry)
+    3. Aggregating numeric data separately
+    
     Args:
         merge_df: GeoDataFrame with block-level data
         groupby_col: Column to group by (default: "GEOID20")
@@ -170,6 +183,44 @@ def dissolve_blocks(
         Dissolved GeoDataFrame
     """
     logger.info(f"Dissolving blocks by {groupby_col}")
-    dissolve = merge_df.dissolve(by=groupby_col, aggfunc=aggfunc)
-    return dissolve
+    logger.info(f"Input rows: {len(merge_df):,}")
+    
+    # Identify numeric columns to aggregate (exclude geometry and groupby_col)
+    numeric_cols = merge_df.select_dtypes(include=[np.number]).columns.tolist()
+    if groupby_col in numeric_cols:
+        numeric_cols.remove(groupby_col)
+    
+    # Identify geometry column
+    geom_col = merge_df.geometry.name
+    
+    # Get unique geometries per groupby_col (blocks with same GEOID20 have same geometry)
+    logger.info("Extracting unique geometries per group...")
+    unique_geoms = merge_df[[groupby_col, geom_col]].drop_duplicates(subset=[groupby_col])
+    logger.info(f"Unique groups: {len(unique_geoms):,}")
+    
+    # Aggregate numeric data separately (much faster than dissolve with geometry)
+    logger.info("Aggregating numeric data...")
+    agg_dict = {col: aggfunc for col in numeric_cols if col in merge_df.columns}
+    
+    # Handle non-numeric columns that might need aggregation
+    # For now, we'll drop them or take first value
+    other_cols = [col for col in merge_df.columns 
+                  if col not in numeric_cols and col != geom_col and col != groupby_col]
+    
+    if other_cols:
+        logger.info(f"Dropping non-numeric columns: {other_cols[:5]}..." if len(other_cols) > 5 else f"Dropping non-numeric columns: {other_cols}")
+    
+    # Aggregate numeric columns
+    aggregated = merge_df.groupby(groupby_col, as_index=False).agg(agg_dict)
+    logger.info(f"Aggregated rows: {len(aggregated):,}")
+    
+    # Merge with unique geometries
+    logger.info("Merging aggregated data with geometries...")
+    dissolved = unique_geoms.merge(aggregated, on=groupby_col, how='right')
+    
+    # Ensure it's a GeoDataFrame
+    dissolved = gpd.GeoDataFrame(dissolved, geometry=geom_col, crs=merge_df.crs)
+    
+    logger.info(f"Dissolved rows: {len(dissolved):,}")
+    return dissolved
 

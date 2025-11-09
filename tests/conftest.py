@@ -182,7 +182,8 @@ def temp_dir(tmp_path):
 def mock_census_api():
     """Mock Census API."""
     mock_census = Mock()
-    mock_census.pl.state_county_block.return_value = [
+    # Use get method instead of state_county_block (which doesn't exist)
+    mock_census.pl.get.return_value = [
         {
             "GEO_ID": "1000000US230010001001",
             "P1_001N": 100,

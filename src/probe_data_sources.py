@@ -332,12 +332,10 @@ def test_census_api(name: str, config: Dict) -> Tuple[bool, Optional[str], Optio
         print(f"  Testing Census API with provided key...")
         c = Census(api_key)
         # Test with a small query for Maine (state FIPS 23)
-        result = c.pl.state_county_block(
-            fields=('GEO_ID', 'P1_001N'),
-            state_fips="23",
-            county_fips="001",  # Androscoggin County
-            blockgroup="*",
-            block="*",
+        # Use get method for block-level data (state_county_block method doesn't exist)
+        result = c.pl.get(
+            fields=['GEO_ID', 'P1_001N'],
+            geo={'for': 'block:*', 'in': 'state:23 county:001'},  # Androscoggin County
             year=2020
         )
         if result and len(result) > 0:

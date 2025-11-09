@@ -230,17 +230,32 @@ def run_pipeline(
         logger.info("STEP 4: Generate Visualizations")
         logger.info("=" * 70)
         
-        try:
-            ejblocks_path = Path("data/joins/ejblocks.parquet")
-            
-            generate_all_figures(
-                ejblocks_path=ejblocks_path,
-                output_dir="figs/",
-            )
-            logger.info("✓ Visualizations generated")
-        except Exception as e:
-            logger.error(f"✗ Error generating visualizations: {e}")
-            success = False
+        ejblocks_path = Path("data/joins/ejblocks.parquet")
+        
+        # Check if ejblocks file exists
+        if not ejblocks_path.exists():
+            if skip_analysis:
+                logger.warning(
+                    f"⚠ Skipping visualization: {ejblocks_path} does not exist. "
+                    "This file is created in Step 3 (analysis), which was skipped. "
+                    "Run the pipeline without --skip-analysis to generate visualizations."
+                )
+            else:
+                logger.error(
+                    f"✗ Error: {ejblocks_path} does not exist. "
+                    "This file should have been created in Step 3 (analysis)."
+                )
+                success = False
+        else:
+            try:
+                generate_all_figures(
+                    ejblocks_path=ejblocks_path,
+                    output_dir="figs/",
+                )
+                logger.info("✓ Visualizations generated")
+            except Exception as e:
+                logger.error(f"✗ Error generating visualizations: {e}")
+                success = False
     else:
         logger.info("Skipping visualization step")
     

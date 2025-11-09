@@ -21,10 +21,10 @@ def check_command(command: str) -> bool:
 
 def convert_to_geojson(input_path: Path, output_path: Path, layer_name: str = None) -> bool:
     """
-    Convert shapefile or GeoJSON to GeoJSON in EPSG:4326 using GeoPandas.
+    Convert shapefile, GeoJSON, or Parquet to GeoJSON in EPSG:4326 using GeoPandas.
     
     Args:
-        input_path: Path to input shapefile or GeoJSON
+        input_path: Path to input shapefile, GeoJSON, or Parquet file
         output_path: Path to output GeoJSON file
         layer_name: Optional layer name for shapefiles (not used with GeoPandas)
     
@@ -34,8 +34,11 @@ def convert_to_geojson(input_path: Path, output_path: Path, layer_name: str = No
     try:
         import geopandas as gpd
         
-        # Read the file
-        gdf = gpd.read_file(input_path)
+        # Read the file - handle parquet files specially
+        if input_path.suffix.lower() == '.parquet':
+            gdf = gpd.read_parquet(input_path)
+        else:
+            gdf = gpd.read_file(input_path)
         
         # Reproject to EPSG:4326 if needed
         if gdf.crs != "EPSG:4326":
@@ -98,6 +101,7 @@ def convert_to_pmtiles(
         f"--projection={projection}",
         "--detect-shared-borders",  # Preserve shared boundaries between adjacent polygons
         "--buffer=10",  # Increase buffer size to maintain polygon continuity (default is 5)
+        "--force",  # Overwrite existing output file
         "-o", str(output_path),
         "-l", layer_name,
         str(geojson_path)
@@ -146,12 +150,18 @@ def convert_file(
     
     # Check if input is already GeoJSON
     is_geojson = input_path.suffix.lower() in ['.geojson', '.json']
+    is_parquet = input_path.suffix.lower() == '.parquet'
     
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
         
         if is_geojson:
             # If already GeoJSON, just ensure it's in EPSG:4326
+            geojson_path = tmp_path / "input.geojson"
+            if not convert_to_geojson(input_path, geojson_path):
+                return False
+        elif is_parquet:
+            # Convert parquet to GeoJSON
             geojson_path = tmp_path / "input.geojson"
             if not convert_to_geojson(input_path, geojson_path):
                 return False

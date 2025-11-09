@@ -141,7 +141,8 @@ class TestAnalysis:
     def test_fetch_census_data(self, mock_census_class, mock_census_api):
         """Test fetching census data."""
         mock_census_instance = MagicMock()
-        mock_census_instance.pl.state_county_block.return_value = [
+        # Use get method instead of state_county_block (which doesn't exist)
+        mock_census_instance.pl.get.return_value = [
             {
                 "GEO_ID": "1000000US230010001001",
                 "P1_001N": 100,

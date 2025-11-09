@@ -109,6 +109,36 @@ This project uses `uv` for Python environment and package management.
 
 The notebooks in the `notebooks/` directory should use the "Python 3 (access)" kernel, which will use the Python interpreter from `.venv/bin/python`.
 
+### Census API Key
+
+The project uses the U.S. Census Bureau API to fetch demographic data. You'll need a free API key to access this data.
+
+**Getting an API Key:**
+
+1. Visit the [Census API Key Request Page](https://api.census.gov/data/key_signup.html)
+2. Fill out the form with your name and email address
+3. Submit the form
+4. Check your email for your API key and activation link
+5. Click the activation link to activate your key
+
+**Setting Up Your API Key:**
+
+Create a `.env` file in the project root and add your API key:
+
+```bash
+CENSUS_API_KEY=your_api_key_here
+```
+
+Alternatively, you can pass the API key as a command-line argument when running the pipeline:
+
+```bash
+python src/run_pipeline.py --census-api-key your_api_key_here
+```
+
+**Important:** The project uses caching to reduce API key dependency. After the first successful run with an API key, census data is cached locally in `data/cache/census/`. Subsequent runs will automatically use the cached data and **won't require an API key** unless you want to refresh the cache.
+
+To force a refresh of the cached data, use the `refresh_cache=True` parameter or delete the cache files in `data/cache/census/`.
+
 ## Using the Modules
 
 The project includes several Python modules for data processing:
@@ -148,9 +178,11 @@ merge = merge_walk_times(
 )
 
 # Create ejblocks with census and CEJST data
+# Note: census_api_key is optional if cached data exists (see Census API Key section above)
+import os
 ejblocks = create_ejblocks(
     blocks_path="data/joins/block_dissolve.shp.zip",
-    census_api_key=os.getenv("CENSUS_API_KEY"),
+    census_api_key=os.getenv("CENSUS_API_KEY"),  # Optional if cached
     cejst_path="data/cejst-me.zip",
     relationship_file_path="data/tab2010_tab2020_st23_me.txt",
     output_path="data/joins/ejblocks.shp.zip",

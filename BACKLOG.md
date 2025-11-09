@@ -407,6 +407,43 @@ This suggests migration is ongoing but incomplete.
 
 ---
 
+### TD-011: H3 Not Used as Primary Geographic Unit
+**Priority:** Medium  
+**Effort:** Large (72-104 hours)  
+**Category:** Architecture / Analysis Methodology
+
+**Description:**  
+H3 hexagon infrastructure was built to replace census blocks as standardized geographic units, but the original goal has not been achieved. H3 is currently only used for post-processing aggregation and visualization, while all core analysis still uses census blocks.
+
+**Current State:**
+- ✅ H3 relationship file generation exists (`src/h3/relationship.py`)
+- ✅ H3 join utilities exist (`src/h3/joins.py`)
+- ✅ H3 visualization functions exist
+- ✅ H3J format conversion exists
+- ❌ Walk times calculated at census block centroids (not H3 hexagon centroids)
+- ❌ Access metrics calculated per census block (not per H3 hexagon)
+- ❌ Statistical analysis uses census blocks (not H3 hexagons)
+- ❌ No H3-centroid mapping to OSMnx nodes
+
+**Impact:**  
+- Still subject to uneven census block granularity (urban vs. rural)
+- Blocks don't represent meaningful geographic areas
+- Blocks can be very small (parks, parking lots) or very large (rural areas)
+- H3 benefits (standardized sizes, better comparisons) not realized
+- Post-processing aggregation loses precision and accuracy
+
+**Root Cause:**  
+The original intent was to use H3 hexagons as standardized geographic units instead of census blocks, which have uneven granularity. However, the implementation stopped at building infrastructure for aggregation rather than making H3 the primary analysis unit.
+
+**Solution:**  
+See FR-004 for complete implementation plan. This technical debt item tracks the gap between original intent and current state.
+
+**References:**
+- `H3_PROGRESS_ASSESSMENT.md` - Detailed assessment of H3 progress
+- Original goal: Use H3 hexagons instead of census blocks for standardized geographic detail
+
+---
+
 ## 🚀 Feature Requests
 
 ### FR-001: Multi-State Support Expansion
@@ -546,6 +583,73 @@ Current webmap may not be fully optimized for mobile devices.
 - Device testing (iOS, Android)
 - Performance benchmarking
 - Accessibility audit (WCAG 2.1)
+
+---
+
+### FR-004: Complete H3 Implementation as Primary Geographic Unit
+**Priority:** Medium  
+**Effort:** Large (72-104 hours)  
+**Category:** Analysis Methodology / Architecture
+
+**Description:**  
+Complete the original goal of using H3 hexagons as standardized geographic units instead of census blocks. Currently, H3 infrastructure exists but is only used for post-processing aggregation. This feature request would make H3 the primary analysis unit throughout the pipeline.
+
+**Current State:**
+- H3 relationship files can be generated (maps blocks to hexagons)
+- H3 joins can aggregate block-level results to hexagons
+- But walk times, access metrics, and analysis all still use census blocks
+
+**Benefits:**
+- Standardized hexagon sizes provide consistent geographic detail
+- Better for cross-regional comparisons
+- More intuitive for visualization and analysis
+- Avoids uneven census block granularity (urban vs. rural)
+- Blocks don't represent meaningful geographic areas
+
+**Implementation Phases:**
+
+**Phase 1: H3-Centroid Mapping (Prerequisite) - 8-12 hours**
+1. Generate H3 hexagons for the region
+2. Calculate centroid for each hexagon
+3. Find nearest OSMnx node for each centroid (similar to `find_centroids.py` for blocks)
+4. Create `h3_hexagons.shp.zip` with `h3id` and `osmid` columns
+
+**Phase 2: H3-Based Walk Time Calculations - 16-24 hours**
+1. Add `geography_type="hexagons"` option to walk time functions
+2. Use H3 hexagon centroids instead of block centroids
+3. Calculate walk times per H3 hexagon
+4. Output: `walk_times_hexagon_df.csv`
+
+**Phase 3: H3-Based Merging and Analysis - 24-32 hours**
+1. Create `create_ejhexagons()` function (H3 equivalent of `create_ejblocks()`)
+2. Aggregate demographics to H3 hexagons
+3. Calculate access metrics per hexagon
+4. Join CEJST data at H3 level
+
+**Phase 4: H3-Based Statistical Analysis - 16-24 hours**
+1. Update analysis modules to work with H3 hexagons
+2. Create H3-based visualization functions
+3. Update notebooks to use H3 as primary unit
+
+**Phase 5: Pipeline Integration - 8-12 hours**
+1. Make H3 the default geographic unit in pipeline
+2. Keep block-level as optional/legacy mode
+3. Update documentation
+
+**Dependencies:**
+- TD-011 (H3 Not Used as Primary Geographic Unit) - This is the technical debt being addressed
+- Existing H3 infrastructure provides foundation
+
+**Alternative Approach:**
+- Hybrid: Keep blocks for walk time calculations (more precise), use H3 for aggregation/visualization
+- **Pros:** Less effort, maintains precision
+- **Cons:** Doesn't fully achieve original goal
+- **Effort:** ~40-50 hours
+
+**References:**
+- `H3_PROGRESS_ASSESSMENT.md` - Detailed assessment and implementation plan
+- `src/h3/relationship.py` - Existing H3 relationship file generation
+- `src/h3/joins.py` - Existing H3 join utilities
 
 ---
 
@@ -859,9 +963,12 @@ Enhance the interactive webmap with additional features and improvements.
    - Layer opacity control
    - Base map selection
    - Custom layer styling
+   - Remove census block outlines (reduces visual clutter)
 
 3. **Interactive Analysis:**
-   - Click for detailed info
+   - Enhanced hover tooltips with neighborhood information
+   - Click for detailed info popup with comprehensive neighborhood data
+   - Support for neighborhood lookup use case (demographics, walk times, access metrics)
    - Buffer analysis
    - Demographic charts
    - Access comparisons
@@ -873,7 +980,7 @@ Enhance the interactive webmap with additional features and improvements.
    - Mobile optimization (see FR-005)
 
 5. **User Experience:**
-   - Better legend
+   - Enhanced legend showing full spectrum of walk times (complete color scale)
    - Tutorial/help overlay
    - Share functionality
    - Embed code for external sites
@@ -1026,12 +1133,14 @@ Implement caching for Census API calls to improve performance and reduce API usa
 1. **TD-002:** Outdated OSMnx Version - Medium effort (12-16 hours), performance and compatibility improvements
 2. **TD-005:** Hard-coded File Paths - Medium effort (16-24 hours), prerequisite for FR-001
 3. **TD-008:** Incomplete CI/CD Pipeline - Medium effort (16-24 hours), extends existing deployment automation
-4. **IMP-002:** Enhanced Data Validation - Medium effort (24-32 hours), improves data quality
-5. **FR-002:** Interactive Dashboard - Large effort (50-70 hours), improves accessibility for non-technical users
-6. **FR-003:** Mobile-Friendly Webmap - Medium effort (20-30 hours), improves user experience
-7. **IMP-003:** Documentation Improvements - Medium effort (20-30 hours), improves maintainability
-8. **IMP-004:** Improved Logging and Monitoring - Medium effort (16-24 hours), improves debugging
-9. **IMP-006:** Webmap Enhancements - Large effort (30-40 hours), improves webmap functionality
+4. **TD-011:** H3 Not Used as Primary Geographic Unit - Large effort (72-104 hours), addresses original analysis methodology goal
+5. **IMP-002:** Enhanced Data Validation - Medium effort (24-32 hours), improves data quality
+6. **FR-002:** Interactive Dashboard - Large effort (50-70 hours), improves accessibility for non-technical users
+7. **FR-003:** Mobile-Friendly Webmap - Medium effort (20-30 hours), improves user experience
+8. **FR-004:** Complete H3 Implementation - Large effort (72-104 hours), completes original H3 standardization goal
+9. **IMP-003:** Documentation Improvements - Medium effort (20-30 hours), improves maintainability
+10. **IMP-004:** Improved Logging and Monitoring - Medium effort (16-24 hours), improves debugging
+11. **IMP-006:** Webmap Enhancements - Large effort (30-40 hours), improves webmap functionality
 
 ---
 
@@ -1189,6 +1298,7 @@ Some items have dependencies and should be implemented in order:
 **Optional Dependencies:**
 - `FR-003 → IMP-006` (Mobile optimization can inform webmap enhancements)
 - `IMP-002 → FR-001` (Data validation helps ensure multi-state data quality)
+- `TD-011 → FR-004` (Technical debt item tracks the gap, FR-004 addresses it)
 
 ### Risk Mitigation
 
@@ -1230,12 +1340,19 @@ For questions or to contribute:
 
 ---
 
-**Document Version:** 1.2  
+**Document Version:** 1.3  
 **Last Updated:** 2025-11-09  
-**Previous Version:** 1.1 (2025-11-09)  
+**Previous Version:** 1.2 (2025-11-09)  
 **Analysis Method:** Comprehensive codebase review, dependency analysis, and best practices research
 
 **Revision Notes:**
+
+**v1.3 (2025-11-09):**
+- Added TD-011: H3 Not Used as Primary Geographic Unit (technical debt)
+- Added FR-004: Complete H3 Implementation as Primary Geographic Unit (feature request)
+- Integrated findings from H3_PROGRESS_ASSESSMENT.md
+- Updated Medium Priority Items section to include H3-related items
+- Added dependency relationship between TD-011 and FR-004
 
 **v1.2 (2025-11-09):**
 - Rewrote prioritization sections to reflect streamlined backlog

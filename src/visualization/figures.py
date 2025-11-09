@@ -118,9 +118,45 @@ def plot_access_by_group(
         ax.legend(title='"Disadvantaged"')
     
     # Add manual error bars
+    # Need to match std values to patches in the same order as bars are drawn
+    # Seaborn barplot with hue orders patches as: [var1_group1, var1_group2, var2_group1, var2_group2, ...]
+    # So we need to sort percents to match this order
     x_coords = [p.get_x() + 0.5 * p.get_width() for p in ax.patches]
     y_coords = [p.get_height() for p in ax.patches]
-    ax.errorbar(x=x_coords, y=y_coords, yerr=percents["std"].values, fmt="none", c="k")
+    
+    # Sort percents to match the order seaborn creates patches
+    # First by variable, then by groupby_col (to match seaborn's hue ordering)
+    percents_sorted = percents.sort_values(by=["variable", groupby_col])
+    std_values = percents_sorted["std"].values
+    
+    # Ensure we have the right number of std values
+    if len(std_values) != len(ax.patches):
+        # Fallback: create a mapping and extract in patch order
+        std_dict = dict(zip(zip(percents[groupby_col], percents["variable"]), percents["std"]))
+        std_values = []
+        for patch in ax.patches:
+            # Get the x position to determine which variable
+            x_pos = patch.get_x() + patch.get_width() / 2
+            # Find which variable this corresponds to
+            var_name = None
+            for i, tick in enumerate(ax.get_xticks()):
+                if abs(x_pos - tick) < 0.1:  # Close enough to the tick
+                    var_name = percents["variable"].unique()[i]
+                    break
+            
+            # Get the hue value from the patch color or position
+            # For seaborn barplot with hue, patches alternate by hue within each x position
+            patch_idx = ax.patches.index(patch)
+            n_groups = len(percents[groupby_col].unique())
+            group_idx = patch_idx % n_groups
+            group_val = percents[groupby_col].unique()[group_idx]
+            
+            if var_name:
+                std_values.append(std_dict.get((group_val, var_name), 0))
+            else:
+                std_values.append(0)
+    
+    ax.errorbar(x=x_coords, y=y_coords, yerr=std_values, fmt="none", c="k")
     
     # Use just the numeric component of the x variables
     ax.set_xticklabels([label.get_text().split("_")[1] for label in ax.get_xticklabels()])
@@ -174,9 +210,33 @@ def plot_nearest_lands(
     """
     cols_bools = [col + "_bool" for col in trip_time_cols]
     
+    # Check which columns are available
+    required_cols = ["geometry", disadvantage_col] + cols_bools
+    available_cols = [col for col in required_cols if col in data.columns]
+    missing_cols = [col for col in required_cols if col not in data.columns]
+    
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {missing_cols}")
+    
+    # Use GEOID20 if available, otherwise use index
+    id_vars = ["geometry", disadvantage_col]
+    if "GEOID20" in data.columns:
+        id_vars.insert(0, "GEOID20")
+    else:
+        # Create a temporary index column if GEOID20 is missing
+        data = data.copy()
+        data["_index"] = data.index
+        id_vars.insert(0, "_index")
+    
+    # Filter to rows with valid area
+    if "ALAND20" in data.columns:
+        data_filtered = data[data["ALAND20"] > 0]
+    else:
+        data_filtered = data
+    
     # Create melted dataframe with nearest walk time
-    melt = data[data["ALAND20"] > 0].melt(
-        id_vars=["GEOID20", "geometry", disadvantage_col],
+    melt = data_filtered.melt(
+        id_vars=id_vars,
         value_vars=cols_bools
     )
     melt["nearest"] = np.where(
@@ -184,8 +244,11 @@ def plot_nearest_lands(
         melt["variable"].apply(lambda s: int(s.split("_")[1])),
         60  # Max walk time if not accessible
     )
+    # Group by the ID column (GEOID20 or _index)
+    groupby_col = id_vars[0]  # First id_var is the grouping column
+    
     melt = gpd.GeoDataFrame(
-        melt.groupby("GEOID20").agg({
+        melt.groupby(groupby_col).agg({
             "geometry": "first",
             "nearest": "min",
             disadvantage_col: "max"
@@ -263,7 +326,7 @@ def generate_all_figures(
         ejblocks = gpd.read_file(str(ejblocks_path))  # Fallback for existing shapefiles
     
     # Create boolean columns if they don't exist
-    from ..analysis.statistical import create_boolean_columns
+    from analysis.statistical import create_boolean_columns
     if "AC_5_bool" not in ejblocks.columns:
         logger.info("Creating boolean columns")
         ejblocks = create_boolean_columns(ejblocks, trip_time_cols)
