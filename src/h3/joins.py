@@ -7,8 +7,8 @@ from typing import Optional, Union
 import geopandas as gpd
 import pandas as pd
 
-from ..config.defaults import DEFAULT_H3_RESOLUTION
-from ..config.regions import RegionConfig
+from config.defaults import DEFAULT_H3_RESOLUTION
+from config.regions import RegionConfig
 
 logger = logging.getLogger(__name__)
 

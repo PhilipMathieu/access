@@ -10,8 +10,8 @@ import osmnx as ox
 import pandas as pd
 from tqdm import tqdm
 
-from ..config.defaults import DEFAULT_CRS, DEFAULT_TRAVEL_SPEED, DEFAULT_TRIP_TIMES
-from ..config.regions import RegionConfig
+from config.defaults import DEFAULT_CRS, DEFAULT_TRAVEL_SPEED, DEFAULT_TRIP_TIMES
+from config.regions import RegionConfig
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,7 @@ def calculate_walk_times(
     trip_times: List[int] = DEFAULT_TRIP_TIMES,
     travel_speed: float = DEFAULT_TRAVEL_SPEED,
     progress_bar: bool = True,
+    geography_type: Optional[str] = None,
 ) -> pd.DataFrame:
     """Calculate walk times from center nodes to conserved lands.
     
@@ -86,10 +87,11 @@ def calculate_walk_times(
         trip_times: List of trip time thresholds in minutes (default: [5,10,15,20,30,45,60])
         travel_speed: Travel speed in km/hour (default: 4.5)
         progress_bar: Whether to show progress bar (default: True)
+        geography_type: "tracts" or "blocks" to determine column name (default: auto-detect)
         
     Returns:
         DataFrame with columns: [center_node_col, "land_osmid", "trip_time"]
-        where center_node_col is "tract_osmid" or "block_osmid" depending on input
+        where center_node_col is "tract_osmid" or "block_osmid" depending on geography_type
     """
     # Ensure graph has time attributes
     sample_edge = next(iter(graph.edges(data=True, keys=True)))[3]
@@ -98,8 +100,12 @@ def calculate_walk_times(
         add_time_attributes(graph, travel_speed)
     
     # Determine column name based on geography type
-    # This is a heuristic - could be improved with explicit parameter
-    center_node_col = "tract_osmid" if len(center_nodes) < 50000 else "block_osmid"
+    if geography_type:
+        center_node_col = "tract_osmid" if geography_type == "tracts" else "block_osmid"
+    else:
+        # Fallback heuristic based on number of nodes
+        center_node_col = "tract_osmid" if len(center_nodes) < 50000 else "block_osmid"
+        logger.warning(f"geography_type not provided, using heuristic: {center_node_col}")
     
     logger.info(f"Calculating walk times for {len(center_nodes)} center nodes")
     logger.info(f"Trip times: {trip_times} minutes")
@@ -218,6 +224,7 @@ def process_walk_times(
         conserved_lands,
         trip_times=trip_times,
         travel_speed=travel_speed,
+        geography_type=geography_type,
     )
     
     # Save results

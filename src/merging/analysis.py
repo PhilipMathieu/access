@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 from census import Census
 
-from ..config.defaults import DEFAULT_CENSUS_FIELDS, DEFAULT_CENSUS_YEAR
-from ..config.regions import RegionConfig, get_region_config
+from config.defaults import DEFAULT_CENSUS_FIELDS, DEFAULT_CENSUS_YEAR
+from config.regions import RegionConfig, get_region_config
 
 logger = logging.getLogger(__name__)
 
