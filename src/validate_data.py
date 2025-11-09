@@ -51,14 +51,19 @@ def save_schema_versions(schemas: Dict):
 def get_schema(file_path: Path) -> Dict:
     """Extract schema information from a data file."""
     try:
-        if file_path.suffix == '.geojson' or file_path.suffix == '.json':
+        if file_path.suffix == '.parquet':
+            gdf = gpd.read_parquet(file_path)
+        elif file_path.suffix == '.geojson' or file_path.suffix == '.json':
             gdf = gpd.read_file(file_path)
         elif file_path.suffix == '.shp' or file_path.suffix == '.zip':
             gdf = gpd.read_file(file_path)
         else:
-            # Try to read as CSV or other format
+            # Try to read as Parquet, CSV, or other format
             try:
-                df = pd.read_csv(file_path)
+                if file_path.suffix == '.parquet':
+                    df = pd.read_parquet(file_path)
+                else:
+                    df = pd.read_csv(file_path)
                 return {
                     "columns": list(df.columns),
                     "dtypes": {col: str(dtype) for col, dtype in df.dtypes.items()},
@@ -163,11 +168,16 @@ def validate_data_quality(file_path: Path, schema: Optional[Dict] = None) -> Dic
     }
     
     try:
-        if file_path.suffix in ['.geojson', '.json', '.shp', '.zip']:
+        if file_path.suffix == '.parquet':
+            gdf = gpd.read_parquet(file_path)
+        elif file_path.suffix in ['.geojson', '.json', '.shp', '.zip']:
             gdf = gpd.read_file(file_path)
         else:
-            # Try CSV
-            df = pd.read_csv(file_path)
+            # Try Parquet or CSV
+            if file_path.suffix == '.parquet':
+                df = pd.read_parquet(file_path)
+            else:
+                df = pd.read_csv(file_path)
             gdf = None
         
         if gdf is not None:
@@ -251,7 +261,9 @@ def validate_data_quality(file_path: Path, schema: Optional[Dict] = None) -> Dic
 def check_coordinate_system_consistency(file_path: Path, expected_crs: Optional[str] = None) -> Tuple[bool, Optional[str]]:
     """Check if coordinate system is consistent."""
     try:
-        if file_path.suffix in ['.geojson', '.json', '.shp', '.zip']:
+        if file_path.suffix == '.parquet':
+            gdf = gpd.read_parquet(file_path)
+        elif file_path.suffix in ['.geojson', '.json', '.shp', '.zip']:
             gdf = gpd.read_file(file_path)
             
             if gdf.crs is None:
@@ -399,8 +411,15 @@ def validate_all_data_sources() -> Dict[str, Dict]:
             # Look for shapefiles or GeoJSON files
             shapefiles = list(file_path.rglob("*.shp"))
             geojson_files = list(file_path.rglob("*.geojson"))
+            parquet_files = list(file_path.rglob("*.parquet"))
             
-            if shapefiles:
+            # Prefer parquet files, then shapefiles with nodes, then regular shapefiles
+            if parquet_files:
+                with_nodes = [f for f in parquet_files if "_with_nodes" in f.stem]
+                target_file = with_nodes[0] if with_nodes else parquet_files[0]
+                result = validate_data_file(target_file, source_name)
+                results[source_name] = result
+            elif shapefiles:
                 # Use first shapefile (or _with_nodes version if available)
                 with_nodes = [f for f in shapefiles if "_with_nodes" in f.stem]
                 target_file = with_nodes[0] if with_nodes else shapefiles[0]

@@ -7,8 +7,8 @@ from typing import Optional, Union
 import geopandas as gpd
 import pandas as pd
 
-from ..config.defaults import DEFAULT_H3_RESOLUTION
-from ..config.regions import RegionConfig
+from config.defaults import DEFAULT_H3_RESOLUTION
+from config.regions import RegionConfig
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +33,10 @@ def h3_join(
     logger.info(f"Loading data from {data_path}")
     
     # Load data
-    if str(data_path).endswith('.shp') or str(data_path).endswith('.zip'):
-        df = gpd.read_file(str(data_path))
+    if str(data_path).endswith('.parquet'):
+        df = gpd.read_parquet(str(data_path))
+    elif str(data_path).endswith('.shp') or str(data_path).endswith('.zip'):
+        df = gpd.read_file(str(data_path))  # Fallback for existing shapefiles
     else:
         df = pd.read_csv(str(data_path))
     
@@ -49,14 +51,24 @@ def h3_join(
         reln_file = Path(relationship_path)
     
     logger.info(f"Loading relationship file from {reln_file}")
-    reln = pd.read_csv(
-        str(reln_file),
-        converters={
-            'GEOID20': str,
-            'h3_fraction': float,
-            'h3id': str
-        }
-    )
+    if str(reln_file).endswith('.parquet'):
+        reln = pd.read_parquet(str(reln_file))
+        # Ensure correct types
+        if 'GEOID20' in reln.columns:
+            reln['GEOID20'] = reln['GEOID20'].astype(str)
+        if 'h3id' in reln.columns:
+            reln['h3id'] = reln['h3id'].astype(str)
+        if 'h3_fraction' in reln.columns:
+            reln['h3_fraction'] = reln['h3_fraction'].astype(float)
+    else:
+        reln = pd.read_csv(
+            str(reln_file),
+            converters={
+                'GEOID20': str,
+                'h3_fraction': float,
+                'h3id': str
+            }
+        )  # Fallback for CSV input
     
     # Merge
     logger.info("Merging data with H3 relationship file")

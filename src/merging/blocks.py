@@ -8,8 +8,8 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 
-from ..config.defaults import DEFAULT_TRIP_TIMES
-from ..config.regions import RegionConfig
+from config.defaults import DEFAULT_TRIP_TIMES
+from config.regions import RegionConfig
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +36,47 @@ def merge_walk_times(
         GeoDataFrame with merged data
     """
     logger.info("Loading blocks data")
-    blocks = gpd.read_file(str(blocks_path))
+    if str(blocks_path).endswith('.parquet'):
+        blocks = gpd.read_parquet(str(blocks_path))
+    else:
+        blocks = gpd.read_file(str(blocks_path))  # Fallback for existing shapefiles
     
     logger.info("Loading conserved lands data")
-    conserved_lands = gpd.read_file(str(conserved_lands_path))
+    if str(conserved_lands_path).endswith('.parquet'):
+        conserved_lands = gpd.read_parquet(str(conserved_lands_path))
+    else:
+        conserved_lands = gpd.read_file(str(conserved_lands_path))  # Fallback for existing shapefiles
     
     logger.info("Loading walk times data")
-    df = pd.read_csv(str(walk_times_path), index_col=0)
+    if str(walk_times_path).endswith('.parquet'):
+        df = pd.read_parquet(str(walk_times_path))
+        # Handle index if it was saved as index
+        if df.index.name in ["tract_osmid", "block_osmid"]:
+            pass  # Index is already set correctly
+        elif df.index.name is None and len(df.index) > 0:
+            # Try to reset index if it's a default integer index
+            if isinstance(df.index, pd.RangeIndex):
+                df = df.reset_index(drop=True)
+    else:
+        df = pd.read_csv(str(walk_times_path), index_col=0)  # Fallback for CSV input
+    
+    # Determine the column name for center node (could be tract_osmid or block_osmid)
+    # Check if it's in the index name or columns
+    if df.index.name in ["tract_osmid", "block_osmid"]:
+        center_node_col = df.index.name
+        # Reset index to make it a column for merging
+        df = df.reset_index()
+    elif "tract_osmid" in df.columns:
+        center_node_col = "tract_osmid"
+    elif "block_osmid" in df.columns:
+        center_node_col = "block_osmid"
+    else:
+        raise ValueError(
+            f"Walk times CSV must contain either 'tract_osmid' or 'block_osmid' as index or column. "
+            f"Index name: {df.index.name}, Columns: {list(df.columns)}"
+        )
+    
+    logger.info(f"Using center node column: {center_node_col}")
     
     # Merge walk times with conserved lands
     logger.info("Merging walk times with conserved lands")
@@ -55,9 +89,8 @@ def merge_walk_times(
     
     # Merge with blocks
     logger.info("Merging with blocks")
-    # Determine the column name for center node (could be tract_osmid or block_osmid)
-    center_node_col = "tract_osmid" if "tract_osmid" in df.columns else "block_osmid"
-    
+    # Rename the center node column to match blocks' osmid column for merging
+    # We'll keep the original column name for reference
     merge = gpd.GeoDataFrame(
         blocks.merge(
             df_with_lands,
@@ -76,7 +109,17 @@ def merge_walk_times(
     
     if output_path:
         logger.info(f"Saving merged data to {output_path}")
-        merge.to_file(str(output_path))
+        # Convert OSMnx ID columns to strings to avoid shapefile field width limitations
+        # Shapefiles have a 10-digit limit for integers, but OSMnx IDs can be much larger
+        osmid_columns = [col for col in merge.columns if 'osmid' in col.lower()]
+        for col in osmid_columns:
+            if col in merge.columns:
+                merge[col] = merge[col].astype(str)
+        
+        if str(output_path).endswith('.parquet'):
+            merge.to_parquet(str(output_path))
+        else:
+            merge.to_file(str(output_path))  # Fallback for shapefile output
     
     return merge
 

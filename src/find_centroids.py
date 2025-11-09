@@ -17,7 +17,10 @@ if __name__ == "__main__":
     print("Loaded", args.graph)
 
     # load input file
-    polys = gpd.read_file(args.input).to_crs("EPSG:3857")
+    if str(args.input).endswith('.parquet'):
+        polys = gpd.read_parquet(str(args.input)).to_crs("EPSG:3857")
+    else:
+        polys = gpd.read_file(str(args.input)).to_crs("EPSG:3857")  # Fallback for existing shapefiles
     print("Loaded", args.input)
 
     # drop invalid geometries
@@ -31,9 +34,15 @@ if __name__ == "__main__":
     polys["osmid"] = gdf_nodes.loc[gdf_nodes.sindex.nearest(polys.centroid)[1]]["osmid"].values
 
     # save output
-    outfile = str(args.input).rsplit(".", 1)[1]+args.suffix+".shp.zip"
-    print("Saving", outfile)
-    polys.to_file(outfile, driver="ESRI Shapefile")
+    # Determine output format based on input or default to parquet
+    if str(args.input).endswith('.parquet'):
+        outfile = str(args.input).rsplit(".", 1)[0] + args.suffix + ".parquet"
+        print("Saving", outfile)
+        polys.to_parquet(outfile)
+    else:
+        outfile = str(args.input).rsplit(".", 1)[0] + args.suffix + ".shp.zip"
+        print("Saving", outfile)
+        polys.to_file(outfile, driver="ESRI Shapefile")  # Fallback for shapefile output
 
     exit(0)
 

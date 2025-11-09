@@ -6,13 +6,14 @@ from typing import Optional, Union
 
 import geopandas as gpd
 import pandas as pd
-from h3 import h3
+# Import h3 library directly (local h3 package is not installed as top-level)
+import h3 as h3_lib
 import h3pandas
 from tqdm import tqdm
 tqdm.pandas()
 
-from ..config.defaults import DEFAULT_H3_RESOLUTION_AREA, DEFAULT_H3_RESOLUTION_POPULATION, DEFAULT_CRS
-from ..config.regions import RegionConfig
+from config.defaults import DEFAULT_H3_RESOLUTION_AREA, DEFAULT_H3_RESOLUTION_POPULATION, DEFAULT_CRS
+from config.regions import RegionConfig
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def get_boundary_tiles(row, resolution: int) -> list:
         coords = list(row['geometry'].exterior.coords)
     except AttributeError:
         coords = [coord for poly in row['geometry'].geoms for coord in list(poly.exterior.coords)]
-    h3ids = [h3.geo_to_h3(lat, lng, resolution) for lng, lat in coords]
+    h3ids = [h3_lib.geo_to_h3(lat, lng, resolution) for lng, lat in coords]
     return list(set(h3ids))
 
 
@@ -141,13 +142,19 @@ def generate_h3_relationship_area(
     """
     logger.info(f"Generating H3 relationship file (area method) at resolution {resolution}")
     
-    blocks_raw = gpd.read_file(str(blocks_path))
+    if str(blocks_path).endswith('.parquet'):
+        blocks_raw = gpd.read_parquet(str(blocks_path))
+    else:
+        blocks_raw = gpd.read_file(str(blocks_path))  # Fallback for existing shapefiles
     result = calculate_h3_fractions(blocks_raw, resolution, method="area")
     
     logger.info(f"Saving relationship file to {output_path}")
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    result.to_csv(output_path, index=False)
+    if str(output_path).endswith('.parquet'):
+        result.to_parquet(output_path, index=False)
+    else:
+        result.to_csv(output_path, index=False)  # Fallback for CSV output
     
     return result
 
@@ -173,7 +180,10 @@ def generate_h3_relationship_population(
     """
     logger.info(f"Generating H3 relationship file (population method) at resolution {resolution}")
     
-    blocks_raw = gpd.read_file(str(blocks_path))
+    if str(blocks_path).endswith('.parquet'):
+        blocks_raw = gpd.read_parquet(str(blocks_path))
+    else:
+        blocks_raw = gpd.read_file(str(blocks_path))  # Fallback for existing shapefiles
     
     # Check if population data exists
     if "P1_001N" not in blocks_raw.columns:
@@ -188,7 +198,7 @@ def generate_h3_relationship_population(
             state_fips = blocks_raw["GEOID20"].iloc[0][:2]
         
         logger.info(f"Fetching census population data for state FIPS: {state_fips}")
-        from ..merging.analysis import fetch_census_data
+        from merging.analysis import fetch_census_data
         census_data = fetch_census_data(census_api_key, state_fips)
         blocks_raw = blocks_raw.merge(census_data, left_on="GEOID20", right_on="GEOID20", how="left")
     
@@ -197,7 +207,10 @@ def generate_h3_relationship_population(
     logger.info(f"Saving relationship file to {output_path}")
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    result.to_csv(output_path, index=False)
+    if str(output_path).endswith('.parquet'):
+        result.to_parquet(output_path, index=False)
+    else:
+        result.to_csv(output_path, index=False)  # Fallback for CSV output
     
     return result
 

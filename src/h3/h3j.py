@@ -8,8 +8,8 @@ from typing import Optional, Union
 import pandas as pd
 from jsonschema import validate
 
-from ..config.defaults import DEFAULT_H3_RESOLUTION
-from ..config.regions import RegionConfig
+from config.defaults import DEFAULT_H3_RESOLUTION
+from config.regions import RegionConfig
 from .joins import h3_join
 
 logger = logging.getLogger(__name__)

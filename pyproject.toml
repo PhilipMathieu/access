@@ -19,10 +19,14 @@ dependencies = [
     "ipykernel>=6.25.0",
     "ipywidgets>=8.1.0",
     "cenpy>=1.0.0",
+    "census>=0.8.19",
     "python-dotenv>=1.0.0",
     "requests>=2.31.0",
     "certifi>=2023.0.0",
     "nbconvert>=7.16.6",
+    "rustworkx>=0.14.0",
+    "pyarrow>=14.0.0",
+    "networkx>=3.0",
 ]
 
 [build-system]
@@ -30,7 +34,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["src/config", "src/walk_times", "src/merging", "src/analysis", "src/visualization"]
+force-include = { "src/config" = "config", "src/walk_times" = "walk_times", "src/merging" = "merging", "src/analysis" = "analysis", "src/visualization" = "visualization" }
+# Note: src/h3 is not installed as a top-level package to avoid conflict with the installed h3 library
+# Import h3 modules using: from src.h3.relationship import ...
 
 [tool.uv.sources]
 # If you need to pin specific versions or use alternative sources, add them here

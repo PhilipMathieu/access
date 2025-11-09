@@ -257,7 +257,10 @@ def generate_all_figures(
     setup_fonts(font_path)
     
     logger.info("Loading ejblocks data")
-    ejblocks = gpd.read_file(str(ejblocks_path))
+    if str(ejblocks_path).endswith('.parquet'):
+        ejblocks = gpd.read_parquet(str(ejblocks_path))
+    else:
+        ejblocks = gpd.read_file(str(ejblocks_path))  # Fallback for existing shapefiles
     
     # Create boolean columns if they don't exist
     from ..analysis.statistical import create_boolean_columns
