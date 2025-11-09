@@ -87,7 +87,13 @@ def process_cejst_data(
         DataFrame with CEJST data at block level (2020 geography)
     """
     logger.info("Loading CEJST data")
-    cejst = gpd.read_file(str(cejst_path), converters={"GEOID10": str})
+    if str(cejst_path).endswith('.parquet'):
+        cejst = gpd.read_parquet(str(cejst_path))
+        # Ensure GEOID10 is string type
+        if "GEOID10" in cejst.columns:
+            cejst["GEOID10"] = cejst["GEOID10"].astype(str)
+    else:
+        cejst = gpd.read_file(str(cejst_path), converters={"GEOID10": str})  # Fallback for existing shapefiles
     
     logger.info("Loading relationship file")
     relationships = pd.read_csv(
@@ -159,7 +165,10 @@ def process_cejst_data(
     
     if output_path:
         logger.info(f"Saving processed CEJST data to {output_path}")
-        cejst_block.to_csv(output_path)
+        if str(output_path).endswith('.parquet'):
+            cejst_block.to_parquet(output_path)
+        else:
+            cejst_block.to_csv(output_path)  # Fallback for CSV output
     
     return cejst_block
 
@@ -227,7 +236,10 @@ def create_ejblocks(
     state_fips = str(state_fips).zfill(2)
     
     logger.info("Loading blocks data")
-    blocks = gpd.read_file(str(blocks_path))
+    if str(blocks_path).endswith('.parquet'):
+        blocks = gpd.read_parquet(str(blocks_path))
+    else:
+        blocks = gpd.read_file(str(blocks_path))  # Fallback for existing shapefiles
     
     # Add GEOID grouping columns
     blocks["GEOID_grp"] = blocks["GEOID20"].apply(lambda s: s[:-3])
@@ -264,7 +276,10 @@ def create_ejblocks(
     
     # Save results
     logger.info(f"Saving ejblocks to {output_path}")
-    ejblocks.to_file(str(output_path))
+    if str(output_path).endswith('.parquet'):
+        ejblocks.to_parquet(str(output_path))
+    else:
+        ejblocks.to_file(str(output_path))  # Fallback for shapefile output
     
     return ejblocks
 

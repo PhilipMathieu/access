@@ -142,7 +142,7 @@ def run_pipeline(
         logger.info("=" * 70)
         
         try:
-            walk_times_output = Path("data/walk_times/walk_times_block_df.csv")
+            walk_times_output = Path("data/walk_times/walk_times_block_df.parquet")
             
             process_walk_times(
                 geography_type="blocks",
@@ -168,8 +168,8 @@ def run_pipeline(
         logger.info("=" * 70)
         
         try:
-            walk_times_path = Path("data/walk_times/walk_times_block_df.csv")
-            merge_output = Path("data/joins/block_merge.shp.zip")
+            walk_times_path = Path("data/walk_times/walk_times_block_df.parquet")
+            merge_output = Path("data/joins/block_merge.parquet")
             
             merge = merge_walk_times(
                 blocks_path=region_config.get_blocks_path(with_nodes=True),
@@ -182,9 +182,12 @@ def run_pipeline(
             logger.info(f"✓ Merged walk times: {merge_output}")
             
             # Dissolve blocks
-            dissolve_output = Path("data/joins/block_dissolve.shp.zip")
+            dissolve_output = Path("data/joins/block_dissolve.parquet")
             dissolved = dissolve_blocks(merge, groupby_col='GEOID20')
-            dissolved.to_file(str(dissolve_output))
+            if str(dissolve_output).endswith('.parquet'):
+                dissolved.to_parquet(str(dissolve_output))
+            else:
+                dissolved.to_file(str(dissolve_output))  # Fallback for shapefile output
             logger.info(f"✓ Dissolved blocks: {dissolve_output}")
         except Exception as e:
             logger.error(f"✗ Error merging blocks: {e}")
@@ -199,8 +202,8 @@ def run_pipeline(
         logger.info("=" * 70)
         
         try:
-            blocks_path = Path("data/joins/block_dissolve.shp.zip")
-            ejblocks_output = Path("data/joins/ejblocks.shp.zip")
+            blocks_path = Path("data/joins/block_dissolve.parquet")
+            ejblocks_output = Path("data/joins/ejblocks.parquet")
             
             create_ejblocks(
                 blocks_path=blocks_path,
@@ -225,7 +228,7 @@ def run_pipeline(
         logger.info("=" * 70)
         
         try:
-            ejblocks_path = Path("data/joins/ejblocks.shp.zip")
+            ejblocks_path = Path("data/joins/ejblocks.parquet")
             
             generate_all_figures(
                 ejblocks_path=ejblocks_path,
@@ -246,7 +249,7 @@ def run_pipeline(
         
         try:
             blocks_path = region_config.get_blocks_path(with_nodes=False)
-            h3_output = Path(f"data/blocks/tl_2020_{region_config.state_fips}_tabblock20_h3_{DEFAULT_H3_RESOLUTION_AREA}.csv")
+            h3_output = Path(f"data/blocks/tl_2020_{region_config.state_fips}_tabblock20_h3_{DEFAULT_H3_RESOLUTION_AREA}.parquet")
             
             generate_h3_relationship_area(
                 blocks_path=blocks_path,

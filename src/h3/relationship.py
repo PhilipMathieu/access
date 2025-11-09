@@ -142,13 +142,19 @@ def generate_h3_relationship_area(
     """
     logger.info(f"Generating H3 relationship file (area method) at resolution {resolution}")
     
-    blocks_raw = gpd.read_file(str(blocks_path))
+    if str(blocks_path).endswith('.parquet'):
+        blocks_raw = gpd.read_parquet(str(blocks_path))
+    else:
+        blocks_raw = gpd.read_file(str(blocks_path))  # Fallback for existing shapefiles
     result = calculate_h3_fractions(blocks_raw, resolution, method="area")
     
     logger.info(f"Saving relationship file to {output_path}")
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    result.to_csv(output_path, index=False)
+    if str(output_path).endswith('.parquet'):
+        result.to_parquet(output_path, index=False)
+    else:
+        result.to_csv(output_path, index=False)  # Fallback for CSV output
     
     return result
 
@@ -174,7 +180,10 @@ def generate_h3_relationship_population(
     """
     logger.info(f"Generating H3 relationship file (population method) at resolution {resolution}")
     
-    blocks_raw = gpd.read_file(str(blocks_path))
+    if str(blocks_path).endswith('.parquet'):
+        blocks_raw = gpd.read_parquet(str(blocks_path))
+    else:
+        blocks_raw = gpd.read_file(str(blocks_path))  # Fallback for existing shapefiles
     
     # Check if population data exists
     if "P1_001N" not in blocks_raw.columns:
@@ -198,7 +207,10 @@ def generate_h3_relationship_population(
     logger.info(f"Saving relationship file to {output_path}")
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    result.to_csv(output_path, index=False)
+    if str(output_path).endswith('.parquet'):
+        result.to_parquet(output_path, index=False)
+    else:
+        result.to_csv(output_path, index=False)  # Fallback for CSV output
     
     return result
 

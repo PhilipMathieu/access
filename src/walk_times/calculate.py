@@ -2,16 +2,22 @@
 
 import logging
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import geopandas as gpd
 import networkx as nx
+import numpy as np
 import osmnx as ox
 import pandas as pd
+import rustworkx as rx
 from tqdm import tqdm
 
 from config.defaults import DEFAULT_CRS, DEFAULT_TRAVEL_SPEED, DEFAULT_TRIP_TIMES
 from config.regions import RegionConfig
+from walk_times.graph_utils import (
+    convert_node_ids_to_rx_indices,
+    nx_to_rustworkx,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +47,36 @@ def load_graph(
     G = ox.project_graph(G, crs)
     
     return G
+
+
+# Cache for rustworkx graph conversions
+_rx_graph_cache: Dict[str, Tuple[rx.PyDiGraph, Dict[int, int], Dict[int, int]]] = {}
+
+
+def get_rustworkx_graph(
+    nx_graph: nx.MultiDiGraph,
+    cache_key: Optional[str] = None,
+) -> Tuple[rx.PyDiGraph, Dict[int, int], Dict[int, int]]:
+    """Get rustworkx graph from NetworkX graph, with caching.
+    
+    Args:
+        nx_graph: NetworkX MultiDiGraph
+        cache_key: Optional cache key for caching the conversion
+        
+    Returns:
+        Tuple of (rustworkx_graph, nx_id_to_rx_idx, rx_idx_to_nx_id)
+    """
+    if cache_key and cache_key in _rx_graph_cache:
+        logger.info(f"Using cached rustworkx graph (key: {cache_key})")
+        return _rx_graph_cache[cache_key]
+    
+    rx_graph, nx_id_to_rx_idx, rx_idx_to_nx_id = nx_to_rustworkx(nx_graph, weight_attr="time")
+    
+    if cache_key:
+        _rx_graph_cache[cache_key] = (rx_graph, nx_id_to_rx_idx, rx_idx_to_nx_id)
+        logger.info(f"Cached rustworkx graph (key: {cache_key})")
+    
+    return rx_graph, nx_id_to_rx_idx, rx_idx_to_nx_id
 
 
 def add_time_attributes(
@@ -80,6 +116,9 @@ def calculate_walk_times(
     For each center node, finds all conserved lands reachable within the
     specified trip times and returns the minimum trip time for each land.
     
+    Uses rustworkx for faster graph operations and a single Dijkstra algorithm
+    instead of multiple ego_graph calls.
+    
     Args:
         center_nodes: List or Series of OSMnx node IDs (center points)
         graph: NetworkX graph with time attributes on edges
@@ -110,8 +149,30 @@ def calculate_walk_times(
     logger.info(f"Calculating walk times for {len(center_nodes)} center nodes")
     logger.info(f"Trip times: {trip_times} minutes")
     
+    # Convert NetworkX graph to rustworkx once
+    logger.info("Converting graph to rustworkx format")
+    rx_graph, nx_id_to_rx_idx, rx_idx_to_nx_id = get_rustworkx_graph(graph)
+    
+    # Get conserved land node IDs and convert to rustworkx indices
+    conserved_land_nx_ids = conserved_lands["osmid"].astype(int).values
+    conserved_land_rx_indices = convert_node_ids_to_rx_indices(
+        conserved_land_nx_ids.tolist(),
+        nx_id_to_rx_idx
+    )
+    
+    # Create mapping from rx_idx to nx_id for conserved lands
+    conserved_land_rx_to_nx = {
+        rx_idx: nx_id
+        for nx_id, rx_idx in zip(conserved_land_nx_ids, conserved_land_rx_indices)
+        if rx_idx is not None
+    }
+    
+    # Sort trip times for efficient filtering
+    sorted_trip_times = sorted(trip_times, reverse=True)
+    max_trip_time = max(trip_times)
+    
     def get_lands(center_node: int) -> List[List[int]]:
-        """Find accessible lands from a center node.
+        """Find accessible lands from a center node using single Dijkstra.
         
         Args:
             center_node: OSMnx node ID
@@ -119,30 +180,40 @@ def calculate_walk_times(
         Returns:
             List of [center_node, land_osmid, trip_time] lists
         """
-        node_times = {}
-        # Loop over allowed trip times, reversed to ensure lowest trip time is selected
-        for trip_time in reversed(trip_times):
-            # Find subgraph from center node
-            try:
-                subgraph = nx.ego_graph(graph, center_node, radius=trip_time, distance="time")
-                # Set node distance to current trip_time
-                for node in subgraph.nodes():
-                    node_times[node] = trip_time
-            except nx.NetworkXError:
-                logger.warning(f"Node {center_node} not found in graph")
-                continue
+        # Convert center node to rustworkx index
+        if center_node not in nx_id_to_rx_idx:
+            logger.warning(f"Node {center_node} not found in graph")
+            return []
         
-        # Map conserved lands to trip times
-        full_dict = {
-            int(node): node_times[int(node)] if int(node) in node_times else None
-            for node in conserved_lands["osmid"].values
-        }
+        center_rx_idx = nx_id_to_rx_idx[center_node]
         
-        return [
-            [center_node, k, v]
-            for k, v in full_dict.items()
-            if v is not None
-        ]
+        # Run single Dijkstra to find distances to all conserved land nodes
+        try:
+            # Use dijkstra_shortest_path_lengths to get distances to all nodes
+            # The edge data is the weight (time), so we just return it
+            distances = rx.digraph_dijkstra_shortest_path_lengths(
+                rx_graph,
+                center_rx_idx,
+                edge_cost_fn=lambda edge: edge,  # Edge data is the weight
+                goal=None,  # Find distances to all reachable nodes
+            )
+        except Exception as e:
+            logger.warning(f"Error calculating shortest paths from node {center_node}: {e}")
+            return []
+        
+        # Filter to conserved lands and find minimum trip time for each
+        results = []
+        for land_rx_idx, land_nx_id in conserved_land_rx_to_nx.items():
+            if land_rx_idx in distances:
+                distance = distances[land_rx_idx]
+                
+                # Find the smallest trip time threshold that this distance fits into
+                for trip_time in sorted_trip_times:
+                    if distance <= trip_time:
+                        results.append([center_node, land_nx_id, trip_time])
+                        break  # Use the smallest trip time threshold
+        
+        return results
     
     # Calculate walk times for all center nodes
     if progress_bar:
@@ -207,10 +278,16 @@ def process_walk_times(
     
     # Load data
     logger.info("Loading geography data")
-    geography = gpd.read_file(str(geography_path))
+    if str(geography_path).endswith('.parquet'):
+        geography = gpd.read_parquet(str(geography_path))
+    else:
+        geography = gpd.read_file(str(geography_path))  # Fallback for existing shapefiles
     
     logger.info("Loading conserved lands data")
-    conserved_lands = gpd.read_file(str(conserved_lands_path))
+    if str(conserved_lands_path).endswith('.parquet'):
+        conserved_lands = gpd.read_parquet(str(conserved_lands_path))
+    else:
+        conserved_lands = gpd.read_file(str(conserved_lands_path))  # Fallback for existing shapefiles
     
     # Load and prepare graph
     G = load_graph(graph_path, cache_folder=cache_folder)
@@ -231,7 +308,10 @@ def process_walk_times(
     logger.info(f"Saving results to {output_path}")
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_path, index=False)
+    if str(output_path).endswith('.parquet'):
+        df.to_parquet(output_path, index=False)
+    else:
+        df.to_csv(output_path, index=False)  # Fallback for CSV output
     
     return df
 
