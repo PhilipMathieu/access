@@ -5,11 +5,62 @@ This project analyzes spatial accessibility to conservation lands, with a focus 
 
 ## Documentation
 
-The best source for information is the set of Jupyter notebooks available in the [notebooks/](notebooks/) subdirectory. These notebooks demonstrate the analysis workflow and show how to use the Python modules.
+I am in the process of a major overhaul of this repo which will eventually include adding better documentation. For now, the best starting point is the [notebooks/](notebooks/) subdirectory, which contains a sequence of Jupyter notebooks that demonstrate the analysis workflow and show how to use the Python modules.
 
 **Note:** Core data processing logic has been migrated to standalone Python modules in `src/` for better maintainability and to support expansion to all of New England. The notebooks have been updated to show both the original implementation and examples using the new modules.
 
 For questions, please contact Philip Mathieu (mathieu.p@northeastern.edu).
+
+## Backlog
+
+If you're curious about work in progress on this project, see [BACKLOG.md](BACKLOG.md).
+
+## Visual Summary
+
+```mermaid
+graph TD
+    %% Data Sources
+    TIGER["TIGER/Line Blocks 2020 (shapefile)<br/>───────────<br/>GEOID20 (block)<br/>ALAND20<br/>AWATER20<br/>...<br/>geometry<br/>osmid"]
+    CONSERVED["Maine Conserved<br/>Lands (shapefile)<br/>───────────<br/>CALC_AREA<br/>...<br/>geometry<br/>osmid"]
+    REDISTRICT["P.L. 94-171 Redistricting Data<br/>(block level)<br/>───────────<br/>GEOID20 (block)<br/>P1_001N - Population<br/>..."]
+    RELATIONSHIP["Relationship File 2020 (block level)<br/>───────────<br/>GEOID10 (tract)<br/>GEOID20 (block)<br/>ALAND_2020<br/>AWATER_2020<br/>ALAND_INT<br/>AWATER_INT<br/>..."]
+    CEJST["CEJST 1.0 (shapefile, tract level)<br/>───────────<br/>GEOID10 (tract)<br/>Basic Demographics<br/>Total Threshold Criteria Exceeded<br/>Total Categories Exceeded<br/>..."]
+    
+    %% Processing nodes
+    OSM["OpenStreetMap<br/>Network (graphml)<br/>───────────<br/>Nodes (lat/lon)<br/>Edges (distance,<br/>walking time)<br/>..."]
+    EGO["Ego Graph Analysis<br/>to find Conserved<br/>Lands within Certain<br/>Walk Times<br/>(isochrones) of each<br/>Census Block"]
+    WALK1["Blocks with Walk Times to<br/>Conserved Land (csv)<br/>───────────<br/>GEOID20 (block)<br/>block_osmid<br/>land_osmid<br/>trip_time"]
+    JOIN1["Join on<br/>GEOID20"]
+    WALK2["Blocks with Walk Times and<br/>Demographics<br/>───────────<br/>GEOID20 (block)<br/>block_osmid<br/>land_osmid<br/>trip_time<br/>population<br/>population density"]
+    JOIN2["Join on GEOID20,<br/>weighting CEJST<br/>variables by the area<br/>within each tract using the<br/>Relationship File"]
+    FINAL["Blocks with Walk Times,<br/>Demographics, Equity Statistics<br/>───────────<br/>GEOID20 (block)<br/>block_osmid<br/>land_osmid<br/>trip_time<br/>population<br/>Total Threshold Criteria Exceeded<br/>Total Categories Exceeded"]
+    
+    %% Connections
+    TIGER --> OSM
+    CONSERVED --> OSM
+    OSM --> EGO
+    TIGER --> EGO
+    CONSERVED --> EGO
+    EGO --> WALK1
+    WALK1 --> JOIN1
+    REDISTRICT --> JOIN1
+    JOIN1 --> WALK2
+    WALK2 --> JOIN2
+    RELATIONSHIP --> JOIN2
+    CEJST --> JOIN2
+    JOIN2 --> FINAL
+    
+    %% Styling
+    classDef censusData fill:#FFE680,stroke:#333,stroke-width:2px
+    classDef externalData fill:#90EE90,stroke:#333,stroke-width:2px
+    classDef generatedData fill:#FFB6C1,stroke:#333,stroke-width:2px
+    classDef processNode fill:#E8E8E8,stroke:#333,stroke-width:2px
+    
+    class TIGER,REDISTRICT,RELATIONSHIP,CEJST censusData
+    class CONSERVED,OSM externalData
+    class WALK1,WALK2,FINAL generatedData
+    class EGO,JOIN1,JOIN2 processNode
+```
 
 ## Data Files
 
