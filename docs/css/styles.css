@@ -12840,39 +12840,56 @@ footer.footer .social-link:hover {
   border-radius: 2px;
 }
 
-/* Layer Toggle */
-.layer-toggle {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: white;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  z-index: 1000;
-  max-width: 200px;
-  font-size: 0.9rem;
-}
-
-.layer-toggle h5 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1rem;
-}
-
-.layer-toggle label {
-  display: block;
+/* Legend items with toggle buttons */
+.legend-item-with-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 8px;
-  cursor: pointer;
 }
 
-.layer-toggle input[type="checkbox"] {
-  margin-right: 8px;
+.legend-item-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.layer-toggle-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #666;
+  transition: all 0.2s;
+  margin-left: 8px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.layer-toggle-btn:hover {
+  background: #f5f5f5;
+  border-color: #508142;
+  color: #508142;
+}
+
+.layer-toggle-btn:focus {
+  outline: 2px solid #508142;
+  outline-offset: 2px;
 }
 
 /* Popup styling */
 .popup-content {
   font-size: 0.9rem;
+}
+
+.popup-content.compact {
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .popup-content h4 {
@@ -12885,16 +12902,327 @@ footer.footer .social-link:hover {
   margin: 5px 0;
 }
 
+.popup-header {
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #ddd;
+  font-size: 0.95rem;
+}
+
+.popup-meta {
+  font-weight: normal;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.popup-row {
+  margin: 4px 0;
+  font-size: 0.85rem;
+}
+
+.popup-row strong {
+  margin-right: 6px;
+}
+
+/* Legend sections */
+.legend-section {
+  margin-bottom: 15px;
+}
+
+.legend-section:last-child {
+  margin-bottom: 0;
+}
+
+.legend-section strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+
+/* Search control (IMP-006, FR-003) - positioned in upper left */
+.search-control {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 1000;
+  max-width: 300px;
+  width: calc(100% - 40px);
+}
+
+.search-box {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 0.9rem;
+}
+
+.search-box button {
+  padding: 8px 12px;
+  border: none;
+  background: #508142;
+  color: white;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+}
+
+.search-box button:hover {
+  background: #3d6a33;
+}
+
+.search-box button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.search-results {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 5px;
+  font-size: 0.85rem;
+}
+
+.search-results-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.search-result-item {
+  padding: 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+}
+
+.search-result-item:hover {
+  background: #f5f5f5;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+
+/* Screen reader only content (FR-003 - Accessibility) */
+.sr-only {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Focus styles for keyboard navigation (FR-003 - Accessibility) */
+body:not(.using-mouse) *:focus {
+  outline: 2px solid #508142;
+  outline-offset: 2px;
+}
+
+body.using-mouse *:focus {
+  outline: none;
+}
+
+/* Map control buttons - integrated with MapLibre native controls */
+.maplibregl-ctrl-group button.maplibregl-ctrl-icon {
+  width: 29px;
+  height: 29px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.maplibregl-ctrl-group button.maplibregl-ctrl-icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.maplibregl-ctrl-group button.maplibregl-ctrl-icon:focus {
+  outline: 2px solid #508142;
+  outline-offset: 2px;
+}
+
+.maplibregl-ctrl-group button.maplibregl-ctrl-icon.active {
+  background-color: #508142;
+  color: white;
+}
+
+.maplibregl-ctrl-group button.maplibregl-ctrl-icon.active:hover {
+  background-color: #3d6a33;
+}
+
+.maplibregl-ctrl-group button.maplibregl-ctrl-icon i {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Spacing between control groups */
+.maplibregl-ctrl-top-right .maplibregl-ctrl-group + .maplibregl-ctrl-group {
+  margin-top: 10px;
+}
+
+/* Legacy support for old class name */
+.map-control-button {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 8px;
+  margin: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.map-control-button:hover {
+  background: #f5f5f5;
+}
+
+.map-control-button:focus {
+  outline: 2px solid #508142;
+  outline-offset: 2px;
+}
+
+.map-control-button.active {
+  background: #508142;
+  color: white;
+}
+
+/* Accessibility: High contrast mode support */
+@media (prefers-contrast: high) {
+  .map-legend,
+  .search-control {
+    border: 2px solid #000;
+  }
+  
+  .legend-color {
+    border: 2px solid #000;
+  }
+  
+  .search-box button {
+    border: 2px solid #000;
+  }
+  
+  .layer-toggle-btn {
+    border: 2px solid #000;
+  }
+}
+
+/* Accessibility: Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .map-control-button,
+  .search-box button,
+  .search-result-item {
+    transition: none;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile responsiveness (FR-003) */
 @media (max-width: 992px) {
   .map {
     height: 75vh;
   }
   
-  .map-legend,
-  .layer-toggle {
+  .map-legend {
     font-size: 0.8rem;
     padding: 10px;
     max-width: 180px;
+  }
+  
+  .search-control {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    max-width: none;
+    width: auto;
+  }
+  
+  .search-box {
+    flex-direction: column;
+  }
+  
+  .search-box button {
+    width: 100%;
+  }
+  
+  /* Touch-friendly controls */
+  .map-control-button {
+    padding: 12px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .layer-toggle-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .map-legend {
+    bottom: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 576px) {
+  .map {
+    height: 60vh;
+  }
+  
+  .map-legend {
+    font-size: 0.75rem;
+    padding: 8px;
+    max-width: 150px;
+  }
+  
+  .search-control {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 8px;
+  }
+  
+  .search-box input {
+    font-size: 1rem; /* Prevent zoom on iOS */
+  }
+}
+
+/* Print styles (IMP-006) */
+@media print {
+  .map-legend,
+  .search-control,
+  .map-control-button,
+  .maplibregl-ctrl {
+    display: none !important;
+  }
+  
+  .map {
+    height: 100vh;
+    page-break-inside: avoid;
   }
 }
 
