@@ -84,6 +84,7 @@ def run_pipeline(
     skip_analysis: bool = False,
     skip_visualization: bool = False,
     skip_h3: bool = False,
+    n_jobs: int = -1,
 ) -> bool:
     """Run the complete analysis pipeline.
     
@@ -95,6 +96,7 @@ def run_pipeline(
         skip_analysis: Skip analysis step
         skip_visualization: Skip visualization step
         skip_h3: Skip H3 processing step
+        n_jobs: Number of parallel workers for walk times (-1 = all CPUs, 1 = serial)
         
     Returns:
         True if pipeline completed successfully, False otherwise
@@ -153,6 +155,7 @@ def run_pipeline(
                 trip_times=DEFAULT_TRIP_TIMES,
                 travel_speed=DEFAULT_TRAVEL_SPEED,
                 region_config=region_config,
+                n_jobs=n_jobs,
             )
             logger.info(f"✓ Walk times calculated: {walk_times_output}")
         except Exception as e:
@@ -316,6 +319,12 @@ def main():
         action="store_true",
         help="Skip H3 processing step"
     )
+    parser.add_argument(
+        "--n-jobs",
+        type=int,
+        default=-1,
+        help="Number of parallel workers for walk time calculation (-1 = all CPUs, 1 = serial)"
+    )
     
     args = parser.parse_args()
     
@@ -327,6 +336,7 @@ def main():
         skip_analysis=args.skip_analysis,
         skip_visualization=args.skip_visualization,
         skip_h3=args.skip_h3,
+        n_jobs=args.n_jobs,
     )
     
     sys.exit(0 if success else 1)

@@ -27,6 +27,7 @@ dependencies = [
     "rustworkx>=0.14.0",
     "pyarrow>=14.0.0",
     "networkx>=3.0",
+    "statsmodels>=0.14.5",
 ]
 
 [build-system]
@@ -41,4 +42,25 @@ force-include = { "src/config" = "config", "src/walk_times" = "walk_times", "src
 
 [tool.uv.sources]
 # If you need to pin specific versions or use alternative sources, add them here
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.0",
+    "pytest-cov>=7.0.0",
+]
 

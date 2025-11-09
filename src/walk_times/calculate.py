@@ -14,6 +14,7 @@ from tqdm import tqdm
 
 from config.defaults import DEFAULT_CRS, DEFAULT_TRAVEL_SPEED, DEFAULT_TRIP_TIMES
 from config.regions import RegionConfig
+from walk_times.algorithms import bounded_dijkstra, calculate_walk_times_parallel
 from walk_times.graph_utils import (
     convert_node_ids_to_rx_indices,
     nx_to_rustworkx,
@@ -110,14 +111,15 @@ def calculate_walk_times(
     travel_speed: float = DEFAULT_TRAVEL_SPEED,
     progress_bar: bool = True,
     geography_type: Optional[str] = None,
+    n_jobs: int = 1,
 ) -> pd.DataFrame:
     """Calculate walk times from center nodes to conserved lands.
     
     For each center node, finds all conserved lands reachable within the
     specified trip times and returns the minimum trip time for each land.
     
-    Uses rustworkx for faster graph operations and a single Dijkstra algorithm
-    instead of multiple ego_graph calls.
+    Uses rustworkx for faster graph operations and bounded Dijkstra algorithm
+    to limit exploration radius. Supports parallel processing for speedup.
     
     Args:
         center_nodes: List or Series of OSMnx node IDs (center points)
@@ -127,6 +129,8 @@ def calculate_walk_times(
         travel_speed: Travel speed in km/hour (default: 4.5)
         progress_bar: Whether to show progress bar (default: True)
         geography_type: "tracts" or "blocks" to determine column name (default: auto-detect)
+        n_jobs: Number of parallel workers. Set to 1 for serial processing,
+                -1 for all CPUs, or specific number (default: 1)
         
     Returns:
         DataFrame with columns: [center_node_col, "land_osmid", "trip_time"]
@@ -137,6 +141,23 @@ def calculate_walk_times(
     if "time" not in sample_edge:
         logger.info("Graph missing time attributes, adding them")
         add_time_attributes(graph, travel_speed)
+    
+    # Use parallel implementation if n_jobs != 1
+    if n_jobs != 1:
+        from multiprocessing import cpu_count
+        if n_jobs == -1:
+            n_jobs = cpu_count()
+        
+        logger.info(f"Using parallel implementation with {n_jobs} workers")
+        return calculate_walk_times_parallel(
+            center_nodes=list(center_nodes),
+            graph=graph,
+            conserved_lands=conserved_lands,
+            trip_times=trip_times,
+            n_jobs=n_jobs,
+            geography_type=geography_type,
+            progress_bar=progress_bar,
+        )
     
     # Determine column name based on geography type
     if geography_type:
@@ -187,15 +208,13 @@ def calculate_walk_times(
         
         center_rx_idx = nx_id_to_rx_idx[center_node]
         
-        # Run single Dijkstra to find distances to all conserved land nodes
+        # Run bounded Dijkstra to find distances within max_trip_time
         try:
-            # Use dijkstra_shortest_path_lengths to get distances to all nodes
-            # The edge data is the weight (time), so we just return it
-            distances = rx.digraph_dijkstra_shortest_path_lengths(
+            # Use bounded Dijkstra to limit exploration radius
+            distances = bounded_dijkstra(
                 rx_graph,
                 center_rx_idx,
-                edge_cost_fn=lambda edge: edge,  # Edge data is the weight
-                goal=None,  # Find distances to all reachable nodes
+                max_distance=max_trip_time,
             )
         except Exception as e:
             logger.warning(f"Error calculating shortest paths from node {center_node}: {e}")
@@ -248,6 +267,7 @@ def process_walk_times(
     travel_speed: float = DEFAULT_TRAVEL_SPEED,
     cache_folder: Optional[Union[str, Path]] = None,
     region_config: Optional[RegionConfig] = None,
+    n_jobs: int = 1,
 ) -> pd.DataFrame:
     """Process walk times for tracts or blocks.
     
@@ -263,6 +283,7 @@ def process_walk_times(
         travel_speed: Travel speed in km/hour (default: 4.5)
         cache_folder: Optional path to OSMnx cache folder
         region_config: Optional region configuration (currently unused but reserved for future)
+        n_jobs: Number of parallel workers (default: 1 for serial, -1 for all CPUs)
         
     Returns:
         DataFrame with walk time calculations
@@ -302,6 +323,7 @@ def process_walk_times(
         trip_times=trip_times,
         travel_speed=travel_speed,
         geography_type=geography_type,
+        n_jobs=n_jobs,
     )
     
     # Save results

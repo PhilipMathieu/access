@@ -120,7 +120,7 @@ def analyze_access_disparity(
     tab = pd.crosstab(
         data[disadvantage_col],
         access_var,
-        data[data[population_col]],
+        data[population_col],
         aggfunc='sum'
     )
     
