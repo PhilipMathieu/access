@@ -35,85 +35,398 @@ const map = new maplibregl.Map({
 // Add navigation controls
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-// Create legend control with full walk time spectrum and integrated layer toggles
-const legend = document.createElement('div');
-legend.id = 'map-legend';
-legend.className = 'map-legend';
-legend.innerHTML = `
-    <h5>Map Legend</h5>
-    <div class="legend-section">
-        <strong>Walk Time to Conserved Land:</strong>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #508142; opacity: 1.0;"></div>
-            <span>&lt;5 min walk</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #508142; opacity: 0.8;"></div>
-            <span>5-10 min walk</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #508142; opacity: 0.6;"></div>
-            <span>10-15 min walk</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #508142; opacity: 0.5;"></div>
-            <span>15-20 min walk</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #508142; opacity: 0.3;"></div>
-            <span>20-30 min walk</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #508142; opacity: 0.15;"></div>
-            <span>30-45 min walk</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: #508142; opacity: 0.0;"></div>
-            <span>45-60 min walk</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background-color: transparent; border: 1px solid #ccc;"></div>
-            <span>60+ min walk / No access</span>
-        </div>
-    </div>
-    <div class="legend-section">
-        <strong>Other Layers:</strong>
-        <div class="legend-item legend-item-with-toggle">
-            <div class="legend-item-content">
-                <div class="legend-color" style="background-color: #508142; opacity: 0.6;"></div>
-                <span>Conserved Lands</span>
+// Hide attribution control on mobile (it takes up too much space)
+// MapLibre adds attribution automatically, we'll hide it with CSS on mobile
+
+// Custom MapLibre Control for Legend
+class LegendControl {
+    constructor() {
+        this._container = document.createElement('div');
+        this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group map-legend';
+        this._container.id = 'map-legend';
+        this._idleHandlers = []; // Store idle event handlers for cleanup
+        this._layerStates = { // Track layer visibility state
+            'conserved-lands-fill': null,
+            'cejst-hatching': null
+        };
+        // Check if mobile device
+        const isMobile = window.innerWidth <= 992;
+        
+        this._isCollapsed = isMobile; // Default to collapsed on mobile
+        // Load collapsed state from localStorage (only if not mobile, or if explicitly saved)
+        try {
+            const savedState = localStorage.getItem('legend-collapsed');
+            if (savedState === 'true') {
+                this._isCollapsed = true;
+            } else if (savedState === 'false' && !isMobile) {
+                // Only respect "false" on desktop
+                this._isCollapsed = false;
+            }
+        } catch (e) {
+            // localStorage not available, use default (collapsed on mobile)
+        }
+    }
+
+    onAdd(map) {
+        this._map = map;
+        this._render();
+        
+        // Wait for DOM to update, then add event listeners
+        setTimeout(() => {
+            this._setupToggleHandlers();
+            this._setupCollapseHandler();
+        }, 10);
+        
+        return this._container;
+    }
+
+    _render() {
+        const contentClass = this._isCollapsed ? 'legend-content collapsed' : 'legend-content';
+        const iconClass = this._isCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+        const ariaExpanded = !this._isCollapsed;
+        
+        this._container.innerHTML = `
+            <div class="legend-header">
+                <h5>Map Legend</h5>
+                <button class="legend-toggle-btn" id="legend-collapse-btn" aria-label="${this._isCollapsed ? 'Expand' : 'Collapse'} legend" aria-expanded="${ariaExpanded}" title="${this._isCollapsed ? 'Expand' : 'Collapse'} legend">
+                    <i class="${iconClass}"></i>
+                </button>
             </div>
-            <button class="layer-toggle-btn" id="toggle-conserved" aria-label="Toggle conserved lands layer" title="Show/hide conserved lands">
-                <i class="fas fa-eye"></i>
-            </button>
-        </div>
-        <div class="legend-item legend-item-with-toggle">
-            <div class="legend-item-content">
-                <div class="legend-color" style="background-color: #d54400; opacity: 0.4;"></div>
-                <span>CEJST Disadvantaged Communities</span>
+            <div class="${contentClass}">
+                <div class="legend-section">
+                <strong>Walk Time to Conserved Land:</strong>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #508142; opacity: 1.0;"></div>
+                    <span>&lt;5 min walk</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #508142; opacity: 0.8;"></div>
+                    <span>5-10 min walk</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #508142; opacity: 0.6;"></div>
+                    <span>10-15 min walk</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #508142; opacity: 0.5;"></div>
+                    <span>15-20 min walk</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #508142; opacity: 0.3;"></div>
+                    <span>20-30 min walk</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #508142; opacity: 0.15;"></div>
+                    <span>30-45 min walk</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #508142; opacity: 0.0;"></div>
+                    <span>45-60 min walk</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: transparent; border: 1px solid #ccc;"></div>
+                    <span>60+ min walk / No access</span>
+                </div>
             </div>
-            <button class="layer-toggle-btn" id="toggle-cejst" aria-label="Toggle CEJST layer" title="Show/hide CEJST disadvantaged communities">
-                <i class="fas fa-eye"></i>
-            </button>
-        </div>
-    </div>
-`;
+            <div class="legend-section">
+                <strong>Other Layers:</strong>
+                <div class="legend-item legend-item-with-toggle">
+                    <div class="legend-item-content">
+                        <div class="legend-color" style="background-color: #508142; opacity: 0.6;"></div>
+                        <span>Conserved Lands</span>
+                    </div>
+                    <button class="layer-toggle-btn" id="toggle-conserved" aria-label="Toggle conserved lands layer" title="Show/hide conserved lands">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="legend-item legend-item-with-toggle">
+                    <div class="legend-item-content">
+                        <div class="legend-color" style="background-color: #d54400; opacity: 0.4;"></div>
+                        <span>CEJST Disadvantaged Communities</span>
+                    </div>
+                    <button class="layer-toggle-btn" id="toggle-cejst" aria-label="Toggle CEJST layer" title="Show/hide CEJST disadvantaged communities">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                </div>
+            </div>
+        `;
+    }
 
+    _setupCollapseHandler() {
+        const collapseBtn = this._container.querySelector('#legend-collapse-btn');
+        if (collapseBtn) {
+            collapseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this._isCollapsed = !this._isCollapsed;
+                
+                // Save state to localStorage
+                try {
+                    localStorage.setItem('legend-collapsed', this._isCollapsed.toString());
+                } catch (e) {
+                    // localStorage not available, ignore
+                }
+                
+                this._render();
+                this._setupToggleHandlers();
+                this._setupCollapseHandler();
+            });
+            
+            // Keyboard support
+            collapseBtn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    collapseBtn.click();
+                }
+            });
+        }
+    }
 
-// Create search control (positioned to avoid overlap)
-const searchControl = document.createElement('div');
-searchControl.id = 'search-control';
-searchControl.className = 'search-control';
-searchControl.innerHTML = `
-    <div class="search-box">
-        <input type="text" id="search-input" placeholder="Search address or location..." aria-label="Search address or location">
-        <button id="search-button" aria-label="Search"><i class="fas fa-search"></i></button>
-        <button id="locate-button" aria-label="Use current location"><i class="fas fa-crosshairs"></i></button>
-    </div>
-    <div id="search-results" class="search-results"></div>
-`;
+    _setupToggleHandlers() {
+        // Add toggle handlers for conserved lands
+        const toggleConservedBtn = this._container.querySelector('#toggle-conserved');
+        if (toggleConservedBtn) {
+            const updateConservedIcon = () => {
+                const icon = toggleConservedBtn.querySelector('i, svg');
+                if (!icon) {
+                    console.warn('Icon element not found for conserved lands toggle');
+                    return;
+                }
+                
+                if (!this._map.getLayer('conserved-lands-fill')) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    return;
+                }
+                
+                // Check visibility - use tracked state if available, otherwise check map property
+                let isVisible;
+                const storedState = this._layerStates['conserved-lands-fill'];
+                if (typeof storedState === 'boolean') {
+                    isVisible = storedState;
+                } else {
+                    const visibility = this._map.getLayoutProperty('conserved-lands-fill', 'visibility');
+                    isVisible = visibility !== 'none';
+                    // Update tracked state
+                    this._layerStates['conserved-lands-fill'] = isVisible;
+                }
+                
+                if (isVisible) {
+                    icon.classList.remove('fa-eye-slash');
+                    if (!icon.classList.contains('fa-eye')) {
+                        icon.classList.add('fa-eye');
+                    }
+                    toggleConservedBtn.setAttribute('aria-label', 'Hide conserved lands layer');
+                    toggleConservedBtn.setAttribute('title', 'Hide conserved lands');
+                } else {
+                    icon.classList.remove('fa-eye');
+                    if (!icon.classList.contains('fa-eye-slash')) {
+                        icon.classList.add('fa-eye-slash');
+                    }
+                    toggleConservedBtn.setAttribute('aria-label', 'Show conserved lands layer');
+                    toggleConservedBtn.setAttribute('title', 'Show conserved lands');
+                }
+                if (icon.tagName && icon.tagName.toLowerCase() === 'svg') {
+                    icon.setAttribute('data-icon', isVisible ? 'eye' : 'eye-slash');
+                }
+            };
+            
+            toggleConservedBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!this._map.getLayer('conserved-lands-fill')) {
+                    return;
+                }
+                
+                // Toggle the tracked state
+                const currentVisibilityState = typeof this._layerStates['conserved-lands-fill'] === 'boolean'
+                    ? this._layerStates['conserved-lands-fill']
+                    : this._map.getLayoutProperty('conserved-lands-fill', 'visibility') !== 'none';
+                const nextState = !currentVisibilityState;
+                this._layerStates['conserved-lands-fill'] = nextState;
+                const visibility = nextState ? 'visible' : 'none';
+                
+                this._map.setLayoutProperty('conserved-lands-fill', 'visibility', visibility);
+                this._map.setLayoutProperty('conserved-lands-outline', 'visibility', visibility);
+                
+                // Update icon immediately using tracked state
+                updateConservedIcon();
+            });
+            
+            // Update icon when layers are added - use a polling approach with max attempts
+            let attempts = 0;
+            const maxAttempts = 50; // Check for up to ~5 seconds (50 * 100ms)
+            const checkAndUpdateConserved = () => {
+                if (this._map.getLayer('conserved-lands-fill')) {
+                    updateConservedIcon();
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(checkAndUpdateConserved, 100);
+                }
+            };
+            
+            // Start checking after a short delay to allow layers to be added
+            setTimeout(checkAndUpdateConserved, 100);
+            
+            // Also update on idle events in case layers are added later (with cleanup)
+            const idleHandlerConserved = () => {
+                if (this._map.getLayer('conserved-lands-fill')) {
+                    updateConservedIcon();
+                }
+            };
+            this._map.on('idle', idleHandlerConserved);
+            this._idleHandlers.push({ event: 'idle', handler: idleHandlerConserved });
+        }
+        
+        // Add toggle handlers for CEJST
+        const toggleCejstBtn = this._container.querySelector('#toggle-cejst');
+        if (toggleCejstBtn) {
+            const updateCejstIcon = () => {
+                const icon = toggleCejstBtn.querySelector('i, svg');
+                if (!icon) {
+                    console.warn('Icon element not found for CEJST toggle');
+                    return;
+                }
+                
+                if (!this._map.getLayer('cejst-hatching')) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    return;
+                }
+                
+                // Check visibility - use tracked state if available, otherwise check map property
+                let isVisible;
+                const storedState = this._layerStates['cejst-hatching'];
+                if (typeof storedState === 'boolean') {
+                    isVisible = storedState;
+                } else {
+                    const visibility = this._map.getLayoutProperty('cejst-hatching', 'visibility');
+                    isVisible = visibility !== 'none';
+                    // Update tracked state
+                    this._layerStates['cejst-hatching'] = isVisible;
+                }
+                
+                if (isVisible) {
+                    icon.classList.remove('fa-eye-slash');
+                    if (!icon.classList.contains('fa-eye')) {
+                        icon.classList.add('fa-eye');
+                    }
+                    toggleCejstBtn.setAttribute('aria-label', 'Hide CEJST layer');
+                    toggleCejstBtn.setAttribute('title', 'Hide CEJST disadvantaged communities');
+                } else {
+                    icon.classList.remove('fa-eye');
+                    if (!icon.classList.contains('fa-eye-slash')) {
+                        icon.classList.add('fa-eye-slash');
+                    }
+                    toggleCejstBtn.setAttribute('aria-label', 'Show CEJST layer');
+                    toggleCejstBtn.setAttribute('title', 'Show CEJST disadvantaged communities');
+                }
+                if (icon.tagName && icon.tagName.toLowerCase() === 'svg') {
+                    icon.setAttribute('data-icon', isVisible ? 'eye' : 'eye-slash');
+                }
+            };
+            
+            toggleCejstBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!this._map.getLayer('cejst-hatching')) {
+                    return;
+                }
+                
+                // Toggle the tracked state
+                const currentVisibilityState = typeof this._layerStates['cejst-hatching'] === 'boolean'
+                    ? this._layerStates['cejst-hatching']
+                    : this._map.getLayoutProperty('cejst-hatching', 'visibility') !== 'none';
+                const nextState = !currentVisibilityState;
+                this._layerStates['cejst-hatching'] = nextState;
+                const visibility = nextState ? 'visible' : 'none';
+                
+                this._map.setLayoutProperty('cejst-hatching', 'visibility', visibility);
+                
+                // Update icon immediately using tracked state
+                updateCejstIcon();
+            });
+            
+            // Update icon when layers are added - use a polling approach with max attempts
+            // CEJST layer is added asynchronously after image loads, so we need to poll longer
+            let attempts = 0;
+            const maxAttempts = 100; // Check for up to ~10 seconds (100 * 100ms) for CEJST
+            const checkAndUpdateCejst = () => {
+                if (this._map.getLayer('cejst-hatching')) {
+                    updateCejstIcon();
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(checkAndUpdateCejst, 100);
+                }
+            };
+            
+            // Start checking after a short delay to allow layers to be added
+            setTimeout(checkAndUpdateCejst, 100);
+            
+            // Also update on idle events in case layers are added later (with cleanup)
+            const idleHandlerCejst = () => {
+                if (this._map.getLayer('cejst-hatching')) {
+                    updateCejstIcon();
+                }
+            };
+            this._map.on('idle', idleHandlerCejst);
+            this._idleHandlers.push({ event: 'idle', handler: idleHandlerCejst });
+        }
+    }
 
-// Add legend and layer toggle to map when it loads
+    onRemove() {
+        // Clean up event listeners
+        if (this._map && this._idleHandlers) {
+            this._idleHandlers.forEach(({ event, handler }) => {
+                this._map.off(event, handler);
+            });
+            this._idleHandlers = [];
+        }
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+    }
+}
+
+// Custom MapLibre Control for Search
+class SearchControl {
+    constructor() {
+        this._container = document.createElement('div');
+        this._container.className = 'maplibregl-ctrl search-control';
+        this._container.id = 'search-control';
+    }
+
+    onAdd(map) {
+        this._map = map;
+        this._container.innerHTML = `
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search address or location..." aria-label="Search address or location">
+                <button id="search-button" aria-label="Search"><i class="fas fa-search"></i></button>
+                <button id="locate-button" aria-label="Use current location"><i class="fas fa-crosshairs"></i></button>
+            </div>
+            <div id="search-results" class="search-results"></div>
+        `;
+        
+        // Wait for DOM to update, then setup search
+        setTimeout(() => {
+            this._setupSearch();
+        }, 10);
+        
+        return this._container;
+    }
+
+    _setupSearch() {
+        // Call the existing setupSearch function with the map instance
+        if (typeof setupSearch === 'function') {
+            setupSearch(this._map);
+        }
+    }
+
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+    }
+}
+
+// Add legend and search controls to map when it loads
 let controlsAdded = false;
 
 // Function to re-add map layers (used when base map changes)
@@ -230,117 +543,11 @@ function reAddMapLayers() {
 
 // Wait for map to load before adding sources and layers
 map.on('load', () => {
-    // Add legend and search control only once
+    // Add legend and search controls only once
     if (!controlsAdded) {
-        const mapContainer = document.getElementById('map');
-        if (!mapContainer) {
-            console.error('Map container not found');
-            return;
-        }
-        
-        mapContainer.appendChild(legend);
-        mapContainer.appendChild(searchControl);
-        
-        // Wait a moment for DOM to update, then add event listeners
-        setTimeout(() => {
-            // Add toggle handlers for conserved lands
-            const toggleConservedBtn = document.getElementById('toggle-conserved');
-            if (!toggleConservedBtn) {
-                console.warn('Toggle conserved button not found');
-            } else {
-                const updateConservedIcon = () => {
-                    const icon = toggleConservedBtn.querySelector('i');
-                    if (!icon) return;
-                    
-                    // Check if layer exists before checking visibility
-                    if (!map.getLayer('conserved-lands-fill')) {
-                        // Layer doesn't exist yet, default to visible (open eye)
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                        return;
-                    }
-                    
-                    const isVisible = map.getLayoutProperty('conserved-lands-fill', 'visibility') === 'visible';
-                    if (isVisible) {
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                        toggleConservedBtn.setAttribute('aria-label', 'Hide conserved lands layer');
-                        toggleConservedBtn.setAttribute('title', 'Hide conserved lands');
-                    } else {
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
-                        toggleConservedBtn.setAttribute('aria-label', 'Show conserved lands layer');
-                        toggleConservedBtn.setAttribute('title', 'Show conserved lands');
-                    }
-                };
-                
-                toggleConservedBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (!map.getLayer('conserved-lands-fill')) return;
-                    
-                    const isVisible = map.getLayoutProperty('conserved-lands-fill', 'visibility') === 'visible';
-                    const visibility = isVisible ? 'none' : 'visible';
-                    map.setLayoutProperty('conserved-lands-fill', 'visibility', visibility);
-                    map.setLayoutProperty('conserved-lands-outline', 'visibility', visibility);
-                    updateConservedIcon();
-                });
-                
-                // Initialize icon state after layers are added
-                map.once('idle', () => {
-                    updateConservedIcon();
-                });
-            }
-            
-            // Add toggle handlers for CEJST
-            const toggleCejstBtn = document.getElementById('toggle-cejst');
-            if (!toggleCejstBtn) {
-                console.warn('Toggle CEJST button not found');
-            } else {
-                const updateCejstIcon = () => {
-                    const icon = toggleCejstBtn.querySelector('i');
-                    if (!icon) return;
-                    
-                    // Check if layer exists before checking visibility
-                    if (!map.getLayer('cejst-hatching')) {
-                        // Layer doesn't exist yet, default to visible (open eye)
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                        return;
-                    }
-                    
-                    const isVisible = map.getLayoutProperty('cejst-hatching', 'visibility') === 'visible';
-                    if (isVisible) {
-                        icon.classList.remove('fa-eye-slash');
-                        icon.classList.add('fa-eye');
-                        toggleCejstBtn.setAttribute('aria-label', 'Hide CEJST layer');
-                        toggleCejstBtn.setAttribute('title', 'Hide CEJST disadvantaged communities');
-                    } else {
-                        icon.classList.remove('fa-eye');
-                        icon.classList.add('fa-eye-slash');
-                        toggleCejstBtn.setAttribute('aria-label', 'Show CEJST layer');
-                        toggleCejstBtn.setAttribute('title', 'Show CEJST disadvantaged communities');
-                    }
-                };
-                
-                toggleCejstBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (!map.getLayer('cejst-hatching')) return;
-                    
-                    const isVisible = map.getLayoutProperty('cejst-hatching', 'visibility') === 'visible';
-                    const visibility = isVisible ? 'none' : 'visible';
-                    map.setLayoutProperty('cejst-hatching', 'visibility', visibility);
-                    updateCejstIcon();
-                });
-                
-                // Initialize icon state after layers are added
-                map.once('idle', () => {
-                    updateCejstIcon();
-                });
-            }
-            
-            // Add search functionality
-            setupSearch();
-        }, 10);
+        // Add controls using MapLibre's control system
+        map.addControl(new SearchControl(), 'top-left');
+        map.addControl(new LegendControl(), 'bottom-left');
         
         controlsAdded = true;
     }
@@ -515,7 +722,9 @@ map.on('styleimagemissing', (e) => {
 });
 
 // Search functionality (IMP-006)
-function setupSearch() {
+function setupSearch(mapInstance) {
+    // Use provided map instance or fall back to global map
+    const mapToUse = mapInstance || map;
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     const locateButton = document.getElementById('locate-button');
@@ -544,19 +753,19 @@ function setupSearch() {
     async function findNearestConservedLand(lng, lat) {
         // This would require querying the conserved lands layer
         // For now, we'll zoom to the location and show a message
-        map.flyTo({
+        mapToUse.flyTo({
             center: [lng, lat],
             zoom: 14,
             duration: 1500
         });
         
         // Show a marker at the location
-        if (map.getLayer('user-location')) {
-            map.removeLayer('user-location');
-            map.removeSource('user-location');
+        if (mapToUse.getLayer('user-location')) {
+            mapToUse.removeLayer('user-location');
+            mapToUse.removeSource('user-location');
         }
         
-        map.addSource('user-location', {
+        mapToUse.addSource('user-location', {
             type: 'geojson',
             data: {
                 type: 'Feature',
@@ -567,7 +776,7 @@ function setupSearch() {
             }
         });
         
-        map.addLayer({
+        mapToUse.addLayer({
             id: 'user-location',
             type: 'circle',
             source: 'user-location',
@@ -583,7 +792,7 @@ function setupSearch() {
         new maplibregl.Popup()
             .setLngLat([lng, lat])
             .setHTML('<div class="popup-content"><h4>Your Location</h4><p>Use the map to explore conserved lands near you.</p></div>')
-            .addTo(map);
+            .addTo(mapToUse);
     }
     
     // Search button handler
@@ -615,7 +824,7 @@ function setupSearch() {
                 const lat = parseFloat(item.dataset.lat);
                 const displayName = item.dataset.display;
                 
-                map.flyTo({
+                mapToUse.flyTo({
                     center: [lng, lat],
                     zoom: 14,
                     duration: 1500
@@ -624,7 +833,7 @@ function setupSearch() {
                 new maplibregl.Popup()
                     .setLngLat([lng, lat])
                     .setHTML(`<div class="popup-content"><h4>${displayName}</h4></div>`)
-                    .addTo(map);
+                    .addTo(mapToUse);
                 
                 searchResults.innerHTML = '';
                 searchInput.value = '';
@@ -666,23 +875,6 @@ function setupSearch() {
     });
 }
 
-// Measurement state (global to persist across map events)
-let isMeasuring = false;
-let measurePoints = [];
-let measureClickHandler = null;
-
-// Calculate distance between two points (Haversine formula)
-function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371000; // Earth radius in meters
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-}
-
 // Custom MapLibre Control for Tool Buttons (IMP-006)
 class ToolControl {
     constructor() {
@@ -692,131 +884,6 @@ class ToolControl {
 
     onAdd(map) {
         this._map = map;
-        
-        // Add measurement button
-        const measureButton = document.createElement('button');
-        measureButton.id = 'measure-button';
-        measureButton.className = 'maplibregl-ctrl-icon';
-        measureButton.type = 'button';
-        measureButton.innerHTML = '<i class="fas fa-ruler"></i>';
-        measureButton.title = 'Measure Distance';
-        measureButton.setAttribute('aria-label', 'Measure distance');
-        measureButton.setAttribute('tabindex', '0');
-        
-        // Measurement toggle handler
-        measureButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            isMeasuring = !isMeasuring;
-            
-            if (isMeasuring) {
-                measureButton.classList.add('active');
-                this._map.getCanvas().style.cursor = 'crosshair';
-                measurePoints = [];
-                
-                // Remove existing measurement if any
-                if (this._map.getLayer('measure-line')) {
-                    this._map.removeLayer('measure-line');
-                }
-                if (this._map.getSource('measure-line')) {
-                    this._map.removeSource('measure-line');
-                }
-                
-                // Add click handler for measurement
-                if (!measureClickHandler) {
-                    const mapInstance = this._map;
-                    measureClickHandler = (e) => {
-                        if (!isMeasuring) return;
-                        
-                        measurePoints.push([e.lngLat.lng, e.lngLat.lat]);
-                        
-                        if (measurePoints.length === 1) {
-                            // First point - create source and layer
-                            mapInstance.addSource('measure-line', {
-                                type: 'geojson',
-                                data: {
-                                    type: 'Feature',
-                                    geometry: {
-                                        type: 'LineString',
-                                        coordinates: measurePoints
-                                    }
-                                }
-                            });
-                            
-                            mapInstance.addLayer({
-                                id: 'measure-line',
-                                type: 'line',
-                                source: 'measure-line',
-                                paint: {
-                                    'line-color': '#4285F4',
-                                    'line-width': 2,
-                                    'line-dasharray': [2, 2]
-                                }
-                            });
-                        } else {
-                            // Update line
-                            if (mapInstance.getSource('measure-line')) {
-                                mapInstance.getSource('measure-line').setData({
-                                    type: 'Feature',
-                                    geometry: {
-                                        type: 'LineString',
-                                        coordinates: measurePoints
-                                    }
-                                });
-                                
-                                // Calculate distance
-                                let totalDistance = 0;
-                                for (let i = 1; i < measurePoints.length; i++) {
-                                    const p1 = measurePoints[i - 1];
-                                    const p2 = measurePoints[i];
-                                    totalDistance += calculateDistance(p1[1], p1[0], p2[1], p2[0]);
-                                }
-                                
-                                // Show distance in popup
-                                const distanceKm = totalDistance / 1000;
-                                const distanceMi = distanceKm * 0.621371;
-                                const distanceText = distanceKm < 1 
-                                    ? `${(totalDistance).toFixed(0)} m (${(totalDistance * 3.28084).toFixed(0)} ft)`
-                                    : `${distanceKm.toFixed(2)} km (${distanceMi.toFixed(2)} mi)`;
-                                
-                                new maplibregl.Popup()
-                                    .setLngLat(e.lngLat)
-                                    .setHTML(`<div class="popup-content compact"><div class="popup-header"><strong>Distance</strong></div><div class="popup-row">${distanceText}</div><div class="popup-row"><small>Click to add more points, or click measure button to stop</small></div></div>`)
-                                    .addTo(mapInstance);
-                            }
-                        }
-                    };
-                    this._map.on('click', measureClickHandler);
-                }
-            } else {
-                measureButton.classList.remove('active');
-                this._map.getCanvas().style.cursor = '';
-                
-                // Remove measurement layer
-                if (this._map.getLayer('measure-line')) {
-                    this._map.removeLayer('measure-line');
-                }
-                if (this._map.getSource('measure-line')) {
-                    this._map.removeSource('measure-line');
-                }
-                
-                // Remove click handler
-                if (measureClickHandler) {
-                    this._map.off('click', measureClickHandler);
-                    measureClickHandler = null;
-                }
-                
-                measurePoints = [];
-            }
-        });
-        
-        // Keyboard support
-        measureButton.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                measureButton.click();
-            }
-        });
         
         // Add print button
         const printButton = document.createElement('button');
@@ -876,7 +943,6 @@ class ToolControl {
         });
         
         // Add buttons to container
-        this._container.appendChild(measureButton);
         this._container.appendChild(printButton);
         this._container.appendChild(exportButton);
         
@@ -884,15 +950,6 @@ class ToolControl {
     }
 
     onRemove() {
-        // Clean up measurement handler if active
-        if (measureClickHandler) {
-            this._map.off('click', measureClickHandler);
-            measureClickHandler = null;
-        }
-        if (isMeasuring) {
-            isMeasuring = false;
-            this._map.getCanvas().style.cursor = '';
-        }
         this._container.parentNode.removeChild(this._container);
         this._map = undefined;
     }

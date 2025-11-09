@@ -3,6 +3,10 @@
 **Last Updated:** 2025-11-09  
 **Project:** Access - Spatial Accessibility Analysis for Conservation Lands
 
+**Recent Completions:**
+- ✅ IMP-006: Webmap Enhancements (2025-11-09)
+- ✅ FR-003: Mobile-Friendly Webmap (2025-11-09)
+
 This document consolidates technical debt, feature requests, and improvements identified through comprehensive project analysis. Items are categorized by type, priority, and estimated effort.
 
 ---
@@ -552,37 +556,47 @@ Create an interactive dashboard (Dash/Streamlit/Panel) for exploring analysis re
 ### FR-003: Mobile-Friendly Webmap
 **Priority:** Medium  
 **Effort:** Medium (20-30 hours)  
+**Status:** ✅ **COMPLETED** (2025-11-09)  
 **Category:** Webmap / UI
 
 **Description:**  
 Current webmap may not be fully optimized for mobile devices.
 
-**Requirements:**
+**Completed Requirements:**
 1. **Responsive Design:**
-   - Mobile-first layout
-   - Touch-friendly controls
-   - Optimized map interactions
+   - ✅ Mobile-first layout (responsive CSS with media queries)
+   - ✅ Touch-friendly controls (minimum 44px touch targets)
+   - ✅ Optimized map interactions
+   - ✅ Responsive positioning of controls for different screen sizes
 
 2. **Performance:**
-   - Smaller initial load
-   - Progressive loading
-   - Reduced data transfer
+   - ✅ PMTiles format (efficient tile delivery)
+   - ✅ Progressive loading (tiles load as needed)
+   - ✅ Reduced data transfer (vector tiles, not raster)
+   - ❌ Smaller initial load (could be further optimized)
 
 3. **Features:**
-   - Location services integration
-   - "Find nearest conserved land" feature
-   - Offline capability (PWA)
+   - ✅ Location services integration (geolocation button in search)
+   - ✅ "Find nearest conserved land" feature (locate button)
+   - ❌ Offline capability (PWA) (not implemented)
 
 4. **Accessibility:**
-   - Screen reader support
-   - High contrast mode
-   - Keyboard navigation
+   - ✅ Screen reader support (ARIA labels, semantic HTML)
+   - ✅ High contrast mode support (CSS media queries)
+   - ✅ Keyboard navigation (Tab navigation, Enter/Space activation)
+   - ✅ Focus indicators for keyboard users
 
 **Testing:**
-- Cross-browser testing
-- Device testing (iOS, Android)
-- Performance benchmarking
-- Accessibility audit (WCAG 2.1)
+- ✅ Cross-browser testing (basic)
+- ⚠️ Device testing (iOS, Android) (recommended for production)
+- ⚠️ Performance benchmarking (recommended)
+- ⚠️ Accessibility audit (WCAG 2.1) (recommended for production)
+
+**Notes:**
+- All controls are accessible via keyboard
+- Screen reader announcements implemented
+- High contrast mode styles added
+- Mobile-specific CSS adjustments for smaller screens
 
 ---
 
@@ -940,56 +954,61 @@ Set up code quality tools for consistent style and best practices.
 ### IMP-006: Webmap Enhancements
 **Priority:** Medium  
 **Effort:** Large (30-40 hours)  
+**Status:** ✅ **COMPLETED** (2025-11-09)  
 **Category:** Webmap / Visualization
 
 **Description:**  
 Enhance the interactive webmap with additional features and improvements.
 
-**Current State:**
-- PMTiles-based webmap
-- Shows blocks, conserved lands, CEJST
-- Basic interactivity
-
-**Enhancements:**
+**Completed Features:**
 
 1. **Map Features:**
-   - Search by address/location
-   - Measurement tools (distance, area)
-   - Print/export functionality
-   - Bookmarkable views (URL state)
+   - ✅ Search by address/location (Nominatim geocoding)
+   - ✅ Print/export functionality (print button, PNG export)
+   - ✅ Bookmarkable views (URL hash state)
+   - ❌ Measurement tools (removed - not necessary)
 
 2. **Data Layers:**
-   - Toggle layers on/off
-   - Layer opacity control
-   - Base map selection
-   - Custom layer styling
-   - Remove census block outlines (reduces visual clutter)
+   - ✅ Toggle layers on/off (integrated into legend with eye icons)
+   - ✅ Remove census block outlines (reduces visual clutter)
+   - ✅ Collapsible legend
+   - ❌ Layer opacity control (removed - complicates legend interpretation)
+   - ❌ Base map selection (removed - not needed)
 
 3. **Interactive Analysis:**
-   - Enhanced hover tooltips with neighborhood information
-   - Click for detailed info popup with comprehensive neighborhood data
-   - Support for neighborhood lookup use case (demographics, walk times, access metrics)
-   - Buffer analysis
-   - Demographic charts
-   - Access comparisons
+   - ✅ Click for detailed info popup with comprehensive block data
+   - ✅ Only census blocks are clickable (conserved lands and CEJST are visual layers only)
+   - ❌ Enhanced hover tooltips (removed - only show details on click)
+   - ❌ Buffer analysis (not implemented)
+   - ❌ Demographic charts (not implemented)
+   - ❌ Access comparisons (not implemented)
 
 4. **Performance:**
-   - Lazy loading
-   - Tile caching
-   - Optimized rendering
-   - Mobile optimization (see FR-005)
+   - ✅ PMTiles-based tile format (optimized rendering)
+   - ✅ Mobile optimization (see FR-003)
+   - ❌ Lazy loading (not implemented)
+   - ❌ Tile caching (handled by browser)
 
 5. **User Experience:**
-   - Enhanced legend showing full spectrum of walk times (complete color scale)
-   - Tutorial/help overlay
-   - Share functionality
-   - Embed code for external sites
+   - ✅ Enhanced legend showing full spectrum of walk times (complete color scale)
+   - ✅ Integrated controls with MapLibre native styling
+   - ✅ Clean, compact popups
+   - ✅ Proper spacing and positioning of controls
+   - ❌ Tutorial/help overlay (not implemented)
+   - ❌ Share functionality (not implemented)
+   - ❌ Embed code for external sites (not implemented)
 
 **Files:**
 - `docs/index.html`
 - `docs/js/map.js`
 - `docs/js/scripts.js`
 - `docs/css/` (styles)
+
+**Notes:**
+- Controls integrated with MapLibre's native control system
+- Search positioned in top-left, legend in bottom-left
+- Print and export buttons in top-right with navigation controls
+- Removed site menu for single-page site
 
 ---
 
@@ -1036,6 +1055,86 @@ Improve dependency management and update strategy.
 - Renovate (more powerful)
 - `pip-audit` or `safety`
 - `pipdeptree` for dependency visualization
+
+---
+
+### IMP-008: Census Data Caching
+**Priority:** Low  
+**Effort:** Medium (12-20 hours)  
+**Category:** Performance / Data Management
+
+---
+
+### IMP-009: Enhanced Print Layouts
+**Priority:** Medium  
+**Effort:** Medium (12-16 hours)  
+**Category:** Webmap / Visualization
+
+**Description:**  
+Improve print layouts for the webmap to create publication-ready printed maps.
+
+**Current State:**
+- Basic print functionality exists (print button)
+- Print styles hide controls during printing
+- No optimized layout for printed maps
+- No print-specific styling or formatting
+
+**Enhancements:**
+
+1. **Print Layout Options:**
+   - Portrait and landscape orientations
+   - Multiple page sizes (Letter, A4, Legal)
+   - Custom page size support
+   - Margin controls
+
+2. **Map Styling for Print:**
+   - Higher resolution rendering
+   - Enhanced legend for print (larger, clearer)
+   - Print-optimized color schemes
+   - Title and metadata inclusion
+   - Scale bar and north arrow
+   - Attribution and data source information
+
+3. **Layout Customization:**
+   - Optional title block
+   - Optional legend placement (on map or separate page)
+   - Optional metadata panel
+   - Optional inset maps
+   - Custom header/footer
+
+4. **Export Formats:**
+   - PDF export (multi-page support)
+   - High-resolution PNG export
+   - SVG export for vector graphics
+   - Print-optimized image formats
+
+5. **User Experience:**
+   - Print preview before printing
+   - Print dialog with layout options
+   - Save print settings preferences
+   - Print templates for common use cases
+
+**Implementation:**
+1. Create print-specific CSS styles
+2. Add print layout configuration UI
+3. Implement high-resolution rendering
+4. Add PDF export functionality (using jsPDF or similar)
+5. Create print templates
+6. Add print preview functionality
+
+**Benefits:**
+- Publication-ready maps
+- Professional appearance
+- Flexible layout options
+- Better documentation and reporting
+
+**Files:**
+- `docs/css/styles.css` (print media queries)
+- `docs/js/map.js` (print/export functionality)
+- New: `docs/js/print.js` (print layout configuration)
+
+**Dependencies:**
+- IMP-006 (Webmap Enhancements) - Print functionality already exists
 
 ---
 

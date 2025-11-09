@@ -12806,7 +12806,17 @@ footer.footer .social-link:hover {
   display: none;
 }
 
-/* Map Legend */
+/* Map Legend - integrated with MapLibre controls */
+.maplibregl-ctrl.map-legend {
+  background: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  max-width: 250px;
+  font-size: 0.9rem;
+}
+
+/* Legacy support for standalone legend */
 .map-legend {
   position: absolute;
   bottom: 20px;
@@ -12824,6 +12834,66 @@ footer.footer .social-link:hover {
   margin-top: 0;
   margin-bottom: 10px;
   font-size: 1rem;
+}
+
+/* Legend header with collapse button */
+.legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.legend-header h5 {
+  margin: 0;
+  flex: 1;
+}
+
+.legend-toggle-btn {
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #666;
+  transition: all 0.2s;
+  min-width: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.legend-toggle-btn:hover {
+  background: #f5f5f5;
+  border-color: #508142;
+  color: #508142;
+}
+
+.legend-toggle-btn:focus {
+  outline: 2px solid #508142;
+  outline-offset: 2px;
+}
+
+.legend-toggle-btn i {
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+/* Legend content */
+.legend-content {
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+  opacity: 1;
+}
+
+.legend-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .legend-item {
@@ -12940,7 +13010,19 @@ footer.footer .social-link:hover {
 }
 
 
-/* Search control (IMP-006, FR-003) - positioned in upper left */
+/* Search control (IMP-006, FR-003) - integrated with MapLibre controls */
+.maplibregl-ctrl.search-control {
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  max-width: 300px;
+  min-width: 250px;
+  width: auto;
+  box-sizing: border-box;
+}
+
+/* Legacy support for standalone search control */
 .search-control {
   position: absolute;
   top: 20px;
@@ -12958,14 +13040,18 @@ footer.footer .social-link:hover {
   display: flex;
   gap: 5px;
   margin-bottom: 5px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-box input {
   flex: 1;
+  min-width: 0; /* Allows flex item to shrink below content size */
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 3px;
   font-size: 0.9rem;
+  box-sizing: border-box;
 }
 
 .search-box button {
@@ -12977,6 +13063,8 @@ footer.footer .social-link:hover {
   cursor: pointer;
   font-size: 0.9rem;
   transition: background 0.2s;
+  flex-shrink: 0; /* Prevent buttons from shrinking */
+  box-sizing: border-box;
 }
 
 .search-box button:hover {
@@ -12993,6 +13081,8 @@ footer.footer .social-link:hover {
   overflow-y: auto;
   margin-top: 5px;
   font-size: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-results-list {
@@ -13146,36 +13236,88 @@ body.using-mouse *:focus {
     height: 75vh;
   }
   
-  .map-legend {
-    font-size: 0.8rem;
-    padding: 10px;
-    max-width: 180px;
+  /* Hide MapLibre attribution on mobile to save space */
+  .maplibregl-ctrl-attrib {
+    display: none !important;
   }
   
-  .search-control {
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    max-width: none;
-    width: auto;
+  .maplibregl-ctrl.map-legend {
+    font-size: 0.75rem;
+    padding: 8px;
+    max-width: 160px;
+  }
+  
+  .maplibregl-ctrl.search-control {
+    padding: 6px;
+    max-width: 200px;
+    min-width: 180px;
   }
   
   .search-box {
-    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  
+  .search-box input {
+    padding: 6px;
+    font-size: 0.85rem;
   }
   
   .search-box button {
-    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  
+  .legend-header h5 {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+  
+  .legend-section {
+    margin-bottom: 10px;
+  }
+  
+  .legend-section strong {
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+  }
+  
+  .legend-item {
+    margin-bottom: 4px;
+  }
+  
+  .legend-color {
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+  }
+  
+  .legend-item span {
+    font-size: 0.7rem;
+  }
+  
+  .layer-toggle-btn {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 3px 6px;
+    font-size: 0.75rem;
+  }
+  
+  .legend-toggle-btn {
+    min-width: 24px;
+    min-height: 24px;
+    padding: 3px 6px;
+  }
+  
+  .legend-toggle-btn i {
+    font-size: 0.65rem;
   }
   
   /* Touch-friendly controls */
   .map-control-button {
     padding: 12px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-  
-  .layer-toggle-btn {
     min-width: 44px;
     min-height: 44px;
   }
@@ -13193,21 +13335,102 @@ body.using-mouse *:focus {
     height: 60vh;
   }
   
-  .map-legend {
-    font-size: 0.75rem;
-    padding: 8px;
-    max-width: 150px;
+  /* Hide MapLibre attribution on small mobile devices */
+  .maplibregl-ctrl-attrib {
+    display: none !important;
   }
   
-  .search-control {
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    padding: 8px;
+  .maplibregl-ctrl.map-legend {
+    font-size: 0.7rem;
+    padding: 6px;
+    max-width: 140px;
+  }
+  
+  .maplibregl-ctrl.search-control {
+    padding: 5px;
+    max-width: 180px;
+    min-width: 160px;
+  }
+  
+  .search-box {
+    gap: 3px;
+    margin-bottom: 3px;
   }
   
   .search-box input {
-    font-size: 1rem; /* Prevent zoom on iOS */
+    padding: 5px;
+    font-size: 0.8rem;
+  }
+  
+  .search-box button {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+    min-width: 32px;
+    min-height: 32px;
+  }
+  
+  .search-results {
+    font-size: 0.75rem;
+    max-height: 150px;
+  }
+  
+  .legend-header h5 {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+  
+  .legend-section {
+    margin-bottom: 8px;
+  }
+  
+  .legend-section strong {
+    font-size: 0.7rem;
+    margin-bottom: 3px;
+  }
+  
+  .legend-item {
+    margin-bottom: 3px;
+  }
+  
+  .legend-color {
+    width: 14px;
+    height: 14px;
+    margin-right: 5px;
+  }
+  
+  .legend-item span {
+    font-size: 0.65rem;
+  }
+  
+  .layer-toggle-btn {
+    min-width: 26px;
+    min-height: 26px;
+    padding: 2px 5px;
+    font-size: 0.7rem;
+    margin-left: 4px;
+  }
+  
+  .legend-toggle-btn {
+    min-width: 22px;
+    min-height: 22px;
+    padding: 2px 5px;
+  }
+  
+  .legend-toggle-btn i {
+    font-size: 0.6rem;
+  }
+  
+  .map-legend {
+    bottom: 8px;
+    left: 8px;
+    max-width: calc(100% - 16px);
+  }
+  
+  .search-control {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    padding: 5px;
   }
 }
 
