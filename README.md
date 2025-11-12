@@ -9,6 +9,16 @@ I am in the process of a major overhaul of this repo which will eventually inclu
 
 **Note:** Core data processing logic has been migrated to standalone Python modules in `src/` for better maintainability and to support expansion to all of New England. The notebooks have been updated to show both the original implementation and examples using the new modules.
 
+### For Researchers and Graduate Students
+
+If you're interested in understanding how the pipeline works under the hood, see **[HOW_ITS_MADE.md](HOW_ITS_MADE.md)**. This document provides:
+- Detailed walkthrough of each pipeline step
+- Algorithm explanations and design decisions
+- Performance considerations and optimization strategies
+- Guidance for extending the pipeline to new regions
+
+This documentation is designed to help other researchers understand the methodology and adapt this approach for their own work.
+
 For questions, please contact Philip Mathieu (mathieu.p@northeastern.edu).
 
 ## Backlog
