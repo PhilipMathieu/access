@@ -897,7 +897,14 @@ class ToolControl {
         printButton.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            window.print();
+
+            // Populate print metadata (IMP-009)
+            updatePrintMetadata(this._map);
+
+            // Small delay to ensure metadata is updated before print dialog
+            setTimeout(() => {
+                window.print();
+            }, 100);
         });
         printButton.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -1017,5 +1024,106 @@ map.on('load', () => {
         mapContainer.setAttribute('role', 'application');
         mapContainer.setAttribute('aria-label', 'Interactive map showing access to conserved lands in Maine');
     }
+});
+
+// Print metadata update function (IMP-009)
+function updatePrintMetadata(mapInstance) {
+    const mapToUse = mapInstance || map;
+
+    // Update date
+    const printDate = document.getElementById('print-date');
+    if (printDate) {
+        const now = new Date();
+        printDate.textContent = now.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    }
+
+    // Update map center
+    const printCenter = document.getElementById('print-center');
+    if (printCenter) {
+        const center = mapToUse.getCenter();
+        printCenter.textContent = `${center.lat.toFixed(4)}°N, ${Math.abs(center.lng).toFixed(4)}°W`;
+    }
+
+    // Update zoom level
+    const printZoom = document.getElementById('print-zoom');
+    if (printZoom) {
+        printZoom.textContent = mapToUse.getZoom().toFixed(1);
+    }
+
+    // Calculate and update scale
+    updatePrintScale(mapToUse);
+}
+
+// Calculate scale bar for print (IMP-009)
+function updatePrintScale(mapInstance) {
+    const mapToUse = mapInstance || map;
+
+    // Get map bounds and calculate meters per pixel at center
+    const y = mapToUse.getCenter().lat;
+    const metersPerPixel = 40075017 * Math.abs(Math.cos(y * Math.PI / 180)) / Math.pow(2, mapToUse.getZoom() + 8);
+
+    // Scale bar is 40mm on print (approximately 151 pixels at 96 DPI)
+    const scaleBarWidthPixels = 151;
+    const scaleBarMeters = metersPerPixel * scaleBarWidthPixels;
+
+    // Convert to appropriate unit (km or miles)
+    let scaleText;
+    let scaleRatio;
+
+    if (scaleBarMeters >= 1000) {
+        const km = scaleBarMeters / 1000;
+        // Round to nice number
+        let roundedKm;
+        if (km >= 10) {
+            roundedKm = Math.round(km / 10) * 10;
+        } else if (km >= 5) {
+            roundedKm = 5;
+        } else if (km >= 2) {
+            roundedKm = 2;
+        } else {
+            roundedKm = 1;
+        }
+        scaleText = `0 — ${roundedKm} km`;
+        scaleRatio = `1:${Math.round(roundedKm * 1000 / 0.04).toLocaleString()}`; // 40mm in meters
+    } else {
+        // Use meters
+        let roundedM;
+        if (scaleBarMeters >= 500) {
+            roundedM = 500;
+        } else if (scaleBarMeters >= 200) {
+            roundedM = 200;
+        } else if (scaleBarMeters >= 100) {
+            roundedM = 100;
+        } else {
+            roundedM = 50;
+        }
+        scaleText = `0 — ${roundedM} m`;
+        scaleRatio = `1:${Math.round(roundedM / 0.04).toLocaleString()}`;
+    }
+
+    // Update scale labels
+    const printScaleLabel = document.getElementById('print-scale-label');
+    if (printScaleLabel) {
+        printScaleLabel.textContent = `Scale: ${scaleRatio}`;
+    }
+
+    const printScaleDistance = document.getElementById('print-scale-distance');
+    if (printScaleDistance) {
+        printScaleDistance.textContent = scaleText;
+    }
+}
+
+// Update scale when map moves
+map.on('moveend', () => {
+    updatePrintScale(map);
+});
+
+// Initialize print metadata on load
+map.on('load', () => {
+    updatePrintMetadata(map);
 });
 

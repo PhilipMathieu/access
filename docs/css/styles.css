@@ -13434,18 +13434,284 @@ body.using-mouse *:focus {
   }
 }
 
-/* Print styles (IMP-006) */
+/* Print styles (IMP-006, IMP-009) */
 @media print {
-  .map-legend,
+  /* Hide interactive controls that aren't needed for print */
   .search-control,
-  .map-control-button,
-  .maplibregl-ctrl {
+  .maplibregl-ctrl-top-right,
+  .maplibregl-ctrl-bottom-right,
+  header,
+  .scroll-to-top,
+  .content-section,
+  footer {
     display: none !important;
   }
-  
+
+  /* Ensure page breaks properly */
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Map container - full page */
   .map {
+    position: relative;
     height: 100vh;
+    width: 100vw;
     page-break-inside: avoid;
+    page-break-after: avoid;
+  }
+
+  #map {
+    position: relative !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Show and style legend for print */
+  .map-legend {
+    display: block !important;
+    position: absolute !important;
+    bottom: 20mm !important;
+    right: 20mm !important;
+    background: white !important;
+    border: 2px solid #333 !important;
+    padding: 10pt !important;
+    box-shadow: 0 0 10pt rgba(0,0,0,0.3) !important;
+    font-size: 10pt !important;
+    max-width: 50mm !important;
+    z-index: 1000 !important;
+  }
+
+  .map-legend .legend-header {
+    margin-bottom: 8pt !important;
+    border-bottom: 1px solid #333 !important;
+    padding-bottom: 5pt !important;
+  }
+
+  .map-legend .legend-header h5 {
+    font-size: 11pt !important;
+    font-weight: bold !important;
+    margin: 0 !important;
+  }
+
+  .map-legend .legend-toggle-btn {
+    display: none !important;
+  }
+
+  .map-legend .legend-content {
+    display: block !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .map-legend .legend-content.collapsed {
+    display: block !important;
+  }
+
+  .map-legend .legend-section {
+    margin-bottom: 8pt !important;
+  }
+
+  .map-legend .legend-section strong {
+    font-size: 9pt !important;
+    display: block !important;
+    margin-bottom: 4pt !important;
+  }
+
+  .map-legend .legend-item {
+    font-size: 8pt !important;
+    margin: 3pt 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  .map-legend .legend-color {
+    width: 15pt !important;
+    height: 10pt !important;
+    border: 0.5pt solid #666 !important;
+  }
+
+  .map-legend .layer-toggle-btn {
+    display: none !important;
+  }
+
+  /* Print title block */
+  .print-title {
+    display: block !important;
+    position: absolute !important;
+    top: 15mm !important;
+    left: 20mm !important;
+    right: 20mm !important;
+    background: white !important;
+    border: 2px solid #333 !important;
+    padding: 10pt !important;
+    box-shadow: 0 0 10pt rgba(0,0,0,0.3) !important;
+    z-index: 1000 !important;
+  }
+
+  .print-title h1 {
+    font-size: 16pt !important;
+    font-weight: bold !important;
+    margin: 0 0 5pt 0 !important;
+    color: #333 !important;
+  }
+
+  .print-title .subtitle {
+    font-size: 10pt !important;
+    color: #666 !important;
+    margin: 0 !important;
+  }
+
+  /* Print metadata block */
+  .print-metadata {
+    display: block !important;
+    position: absolute !important;
+    bottom: 20mm !important;
+    left: 20mm !important;
+    background: white !important;
+    border: 2px solid #333 !important;
+    padding: 8pt !important;
+    box-shadow: 0 0 10pt rgba(0,0,0,0.3) !important;
+    font-size: 8pt !important;
+    max-width: 60mm !important;
+    z-index: 1000 !important;
+  }
+
+  .print-metadata .metadata-row {
+    margin: 2pt 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  .print-metadata .metadata-label {
+    font-weight: bold !important;
+    display: inline !important;
+  }
+
+  .print-metadata .metadata-value {
+    display: inline !important;
+  }
+
+  /* Print attribution */
+  .print-attribution {
+    display: block !important;
+    position: absolute !important;
+    bottom: 5mm !important;
+    left: 20mm !important;
+    right: 20mm !important;
+    font-size: 7pt !important;
+    color: #666 !important;
+    text-align: center !important;
+    z-index: 999 !important;
+  }
+
+  /* Scale bar for print */
+  .print-scale {
+    display: block !important;
+    position: absolute !important;
+    top: 15mm !important;
+    right: 20mm !important;
+    background: white !important;
+    border: 2px solid #333 !important;
+    padding: 8pt !important;
+    box-shadow: 0 0 10pt rgba(0,0,0,0.3) !important;
+    font-size: 9pt !important;
+    z-index: 1000 !important;
+  }
+
+  .print-scale .scale-bar {
+    width: 40mm !important;
+    height: 5pt !important;
+    border: 1pt solid #333 !important;
+    border-top: none !important;
+    position: relative !important;
+    margin-top: 3pt !important;
+  }
+
+  .print-scale .scale-bar::before,
+  .print-scale .scale-bar::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -5pt !important;
+    width: 1pt !important;
+    height: 5pt !important;
+    background: #333 !important;
+  }
+
+  .print-scale .scale-bar::before {
+    left: 0 !important;
+  }
+
+  .print-scale .scale-bar::after {
+    right: 0 !important;
+  }
+
+  .print-scale .scale-label {
+    text-align: center !important;
+    margin-top: 2pt !important;
+    font-size: 8pt !important;
+  }
+
+  /* North arrow for print */
+  .print-north {
+    display: block !important;
+    position: absolute !important;
+    top: 60mm !important;
+    right: 20mm !important;
+    width: 30pt !important;
+    height: 30pt !important;
+    z-index: 1000 !important;
+  }
+
+  .print-north::before {
+    content: '↑' !important;
+    font-size: 24pt !important;
+    font-weight: bold !important;
+    color: #333 !important;
+    display: block !important;
+    text-align: center !important;
+    line-height: 30pt !important;
+  }
+
+  .print-north::after {
+    content: 'N' !important;
+    font-size: 10pt !important;
+    font-weight: bold !important;
+    color: #333 !important;
+    display: block !important;
+    text-align: center !important;
+    margin-top: -5pt !important;
+  }
+
+  /* Ensure colors print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: letter landscape;
+    margin: 10mm;
+  }
+
+  /* Alternative portrait layout */
+  @media print and (orientation: portrait) {
+    @page {
+      size: letter portrait;
+      margin: 15mm;
+    }
+
+    .map-legend {
+      bottom: 15mm !important;
+      right: 15mm !important;
+    }
+
+    .print-title {
+      top: 10mm !important;
+      left: 15mm !important;
+      right: 15mm !important;
+    }
   }
 }
 
