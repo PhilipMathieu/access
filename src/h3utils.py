@@ -6,6 +6,7 @@ from jsonschema import validate
 import json
 from pathlib import Path
 from typing import Optional
+import logging
 
 try:
     from .config.defaults import DEFAULT_H3_RESOLUTION
@@ -46,12 +47,12 @@ def h3_merge(df, reln=None, inplace=False, resolution=None, region_config=None):
     
 # Summarize a given column by h3 fraction
 def h3_weight(df, col, prefix='h3_'):
-    print(f"Creating {prefix+col}")
+    logging.info(f"Creating {prefix+col}")
     df[prefix+col] = df[col] * df['h3_fraction']
 
 # Summarize a given column by h3 fraction, further weighting by population fraction
 def h3_weight_pop(df, col, prefix='h3_'):
-    print(f"Creating {prefix+col}")
+    logging.info(f"Creating {prefix+col}")
     df[prefix+col] = df[col] * df['P1_001N'] * df['h3_fraction']
 
 # Summarize a given column by h3 fraction
@@ -60,7 +61,7 @@ def h3_plot(df, col:str, lognorm=True, inplace=False, **plot_kwargs):
     if not 'h3id' in df.index.names:
         df = h3_merge(df)
     if not col.startswith('h3_'):
-        print(f"Interpreting \'{col}\' as \'h3_{col}\'")
+        logging.info(f"Interpreting '{col}' as 'h3_{col}'")
         col = 'h3_'+col
     if not col in df.columns:
         h3_weight(df, col[3:])
