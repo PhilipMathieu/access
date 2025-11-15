@@ -1,0 +1,41 @@
+name: Deploy PR Preview
+
+on:
+  pull_request:
+    branches: ["main"]
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  deploy-preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy PR Preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./docs
+          preview-branch: gh-pages
+          umbrella-dir: pr-previews
+          action: auto
+
+  cleanup-preview:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove PR Preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./docs
+          preview-branch: gh-pages
+          umbrella-dir: pr-previews
+          action: remove
