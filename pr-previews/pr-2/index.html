@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZMYJN1RF9Q"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-ZMYJN1RF9Q');
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Justice40 for ME</title>
+    <!-- Favicon-->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico" />
+    <!-- Font Awesome icons (free version)-->
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    <!-- Simple line icons-->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.5.5/css/simple-line-icons.min.css"
+        rel="stylesheet" />
+    <!-- Google fonts-->
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700,300italic,400italic,700italic"
+        rel="stylesheet" type="text/css" />
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link href="css/styles.css" rel="stylesheet" />
+    <!-- MapLibre GL JS CSS -->
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+</head>
+
+<body id="page-top">
+    <!-- Map-->
+    <div class="map">
+        <div id="map"></div>
+    </div>
+    <!-- Introduction-->
+    <section class="content-section bg-primary text-white" id="introduction">
+        <div class="container px-4 px-lg-5 text-center">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-lg-10">
+                    <h2>Access to conservation land is distributed unevenly across Maine.</h2>
+                    <p class="lead mb-5">
+                        This analysis used data from OpenStreetMap, the US Census, and the Maine GeoLibrary to determine
+                        the amount of time it takes to walk from the center of each Census block to the nearest
+                        conserved property.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Video-->
+    <section class="content-section p-5 bg-light" id="video">
+        <div class="container text-center">
+            <div class="embed-responsive embed-responsive-16by9 overflow-hidden">
+                <iframe class="embed-responsive-item" src="https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7062117838756438016?compact=1" allowfullscreen="" title="Embedded post"></iframe>
+            </div>
+        </div>
+    </section>
+    <!-- Key Results-->
+    <section class="content-section pt-0 bg-light" id="keyresults">
+        <div class="container px-4 px-lg-5 text-center">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <h2>Key Results</h2>
+            </div>
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-lg-5 pt-5">
+                    <img class="img-fluid" src="assets/img/disadvantaged_barplot.png">
+                </div>
+                <div class="col-lg-5 pt-5 text-left">
+                    <p class="lead mb-5">
+                        <b>75% of Mainers lack access to conservation land</b> within a 10-minute walk.
+                    </p>
+                    <p class="lead mb-5"><b>Communities identified as “disadvantaged”</b> by the Climate Equity and
+                        Justice Screening
+                        Tool (CEJST) <b>are 24% more likely to lack access</b> to conserved land within a 10-minute
+                        walk.
+                    </p>
+                    <p class="lead mb-5">
+                        Utilizing <b>the CEJST equity metrics revealed inequities</b> in access that were not
+                        visible based on purely demographic data.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+    <!-- Methodology-->
+    <section class="content-section bg-primary text-white" id="method">
+        <div class="container px-4 px-lg-5 text-left">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-lg-7 d-grid gap-1">
+                    <div>
+                        <h2 class="mx-auto mb-5">
+                            Methodology
+                        </h2>
+                        <p class="mb-2">
+                        <ol class="list-styled">
+                            <li>Start with a map of Maine showing each Census block and the network of roads.</li>
+                            <li>For each block, find the conserved lands within a 5-, 10-, 15-, 20-, 30-, 45-, and</li>
+                            <li>60-minute walk.</li>
+                            <li>Calculate the total acres that can be reached within each length of walk.</li>
+                            <li>Add demographic data from the Census API.</li>
+                            <li>Identify blocks labeled as “disadvantaged” by CEJST.</li>
+                            <li>Calculate differences in access to conserved land for communities identified as
+                                “disadvantaged.”</li>
+                        </ol>
+                        </p>
+                    </div>
+                    <div id="data">
+                        <h2 class="mx-auto mb-5 pt-2">
+                            Data Sources
+                        </h2>
+                        <ul class="list-styled">
+                            <li>OpenStreetMap “Walk” Network (<a class="link-light"
+                                    href="https://geoffboeing.com/publications/osmnx-complex-street-networks/">OSMnx</a>)
+                            </li>
+                            <li>Maine Conserved Lands (<a class="link-light"
+                                    href="https://www.maine.gov/geolib/catalog.html#environment:~:text=Bird%20Habitat%20Layer-,Maine%20Conserved%20Lands,-Maine%20Flood%20Hazard">Maine
+                                    GeoLibrary</a>)</li>
+                            <li>Climate Equity and Justice Screening Tool 1.0 (<a class="link-light"
+                                    href="https://screeningtool.geoplatform.gov/">screeningtool.geoplatform.gov</a>)
+                            </li>
+                            <li>TIGER/Line Shapefiles (<a class="link-light"
+                                    href="https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.2020.html#list-tab-790442341">Census.gov</a>)
+                            </li>
+                            <li>P.L. 94-171 Redistricting Data (<a class="link-light"
+                                    href="https://www.census.gov/programs-surveys/decennial-census/about/rdo/summary-files.2020.html">Census.gov</a>)
+                            </li>
+                            <li>Census Block Relationship Files (<a class="link-light"
+                                    href="https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.2020.html#list-tab-1709067297">Census.gov</a>)
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="pb-2">
+                        <a class="btn btn-secondary btn-l" href="https://github.com/PhilipMathieu/access/"><i
+                                class="icon-social-github p-2"></i>
+                            View on GitHub</a>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <img class="img-fluid" src="assets/img/dataflow.png" alt="A flow chart diagram showing relationships between different data frames used in this
+                    analysis.">
+                    <div class="caption pt-2">
+                        <div class="caption-content">
+                            <p class="mb-0">Diagram showing relationships between different data frames used in this
+                                analysis.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        </div>
+    </section>
+    <!-- Limitations-->
+    <section class="content-section bg-light" id="limitations">
+        <div class="container px-4 px-lg-5 text-center">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-lg-10">
+                    <h2>Limitations</h2>
+                    <p class="lead">
+                        This analysis is a step towards quantifying disparities in access to the outdoors, but it is by
+                        no means a comprehensive analysis.
+                    </p>
+                </div>
+            </div>
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-lg-5">
+                    <h3>Defining "Conserved"</h3>
+                    <p>This analysis uses the Maine Conserved Lands layer as the database of conservation lands.
+                        However, doing so limits the analysis to lands that have been formally (and accurately)
+                        registered in the state database. Future avenues of study could include utilizing other metrics
+                        of "green space" that are more inclusive. For instance, many cemetaries serve similar values as
+                        community parks, but were not included in this analysis.
+                    </p>
+                    <h3>Understanding "Disadvantaged"</h3>
+                    <p>
+                        CEJST is a relatively new initiative developed by the Biden Administration (but drawing on a
+                        decade of agency work under previous administrations). It assesses eight different categories of
+                        "indicators of burden" and labels a tract as "disadvantaged" if it hits a predefined threshold
+                        in one or more categories. While this method is already being used by federal agencies, it has
+                        yet to be studied extensively.
+                    </p>
+                </div>
+                <div class="col-lg-5">
+                    <h3>Spatial Sampling</h3>
+                    <p>
+                        This analysis connects Census blocks and conserved lands to the OpenStreetMap network by
+                        assigning each block/land to the network node that is closest to the block/tract centroid. This
+                        means we are assuming that 1) the center of the block or land is a good approximation for the
+                        rough "location" and 2) the block or land is sufficiently small that it can be assigned to a
+                        single node. This may not always be accurate, particularly in the case of larger blocks or
+                        parcels.
+                    </p>
+                    <h3>Public Access</h3>
+                    <p>
+                        This analysis did not attempt to filter lands with regards to whether they are explicitly open
+                        to the public. Thus, even though a land may be within a walk distance, that does not guarantee
+                        that the land has trails or otherwise can be accessed by the general public.
+                    </p>
+                    <p>
+                        Furthermore, many private lands in Maine are open to the public. These lands are not captured by
+                        this analysis.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Footer-->
+    <footer class="footer bg-primary text-light text-center" id="acknowledgements">
+        <div class="container px-4 px-lg-5">
+            <h2>Acknowledgements</h2>
+            <p class="lead mb-5">
+                This project was created by Philip Mathieu, a MS Data Science student at The Roux Institute of
+                Northeastern University, Portland, ME, USA. The project began as an independent study under
+                Prof. Philip Bogden, PhD. Portions of the project were developed with support from Sierra Club
+                Maine. To learn more, contact Philip Mathieu at <a class="link-light"
+                    href="mailto:mathieu.p@northeastern.edu">mathieu.p@northeastern.edu</a>.
+            </p>
+            <p class="small mb-0">Copyright &copy; Philip Mathieu 2023</p>
+        </div>
+    </footer>
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
+    <!-- Bootstrap core JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- MapLibre GL JS -->
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <!-- PMTiles -->
+    <script src="https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js"></script>
+    <!-- Core theme JS-->
+    <script src="js/scripts.js"></script>
+    <!-- Map JS-->
+    <script src="js/map.js"></script>
+</body>
+
+</html>
