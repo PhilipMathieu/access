@@ -1030,28 +1030,17 @@ map.on('load', () => {
 function updatePrintMetadata(mapInstance) {
     const mapToUse = mapInstance || map;
 
-    // Update date
-    const printDate = document.getElementById('print-date');
-    if (printDate) {
+    // Update date in footer
+    const printDateFooter = document.getElementById('print-date-footer');
+    if (printDateFooter) {
         const now = new Date();
-        printDate.textContent = now.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    }
-
-    // Update map center
-    const printCenter = document.getElementById('print-center');
-    if (printCenter) {
         const center = mapToUse.getCenter();
-        printCenter.textContent = `${center.lat.toFixed(4)}°N, ${Math.abs(center.lng).toFixed(4)}°W`;
-    }
-
-    // Update zoom level
-    const printZoom = document.getElementById('print-zoom');
-    if (printZoom) {
-        printZoom.textContent = mapToUse.getZoom().toFixed(1);
+        const zoom = mapToUse.getZoom();
+        printDateFooter.textContent = `${now.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        })} | ${center.lat.toFixed(3)}°N, ${Math.abs(center.lng).toFixed(3)}°W | Zoom: ${zoom.toFixed(1)}`;
     }
 
     // Calculate and update scale
