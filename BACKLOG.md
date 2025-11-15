@@ -7,6 +7,9 @@
 - ✅ IMP-009: Enhanced Print Layouts (2025-11-15)
 - ✅ IMP-006: Webmap Enhancements (2025-11-09)
 - ✅ FR-003: Mobile-Friendly Webmap (2025-11-09)
+- 🔄 TD-007: Error Handling Strategy - Partial (2025-11-15)
+- 🔄 IMP-004: Improved Logging and Monitoring - Partial (2025-11-15)
+- 🔄 IMP-003: Documentation Improvements - Partial (2025-11-15)
 
 This document consolidates technical debt, feature requests, and improvements identified through comprehensive project analysis. Items are categorized by type, priority, and estimated effort.
 
@@ -274,11 +277,12 @@ Modern alternatives exist:
 ---
 
 ### TD-007: No Error Handling Strategy
-**Priority:** High  
-**Effort:** Medium (20-30 hours)  
+**Priority:** High
+**Effort:** Medium (20-30 hours) → **12-18 hours remaining**
+**Status:** 🔄 **IN PROGRESS** (2025-11-15)
 **Category:** Error Handling / Logging
 
-**Description:**  
+**Description:**
 Inconsistent error handling and logging across the codebase:
 - Some functions log errors, others don't
 - No centralized exception handling
@@ -286,27 +290,34 @@ Inconsistent error handling and logging across the codebase:
 - No error recovery mechanisms
 - Failed operations may leave partial data
 
+**Progress (2025-11-15):**
+- ✅ Fixed empty except blocks in `changelog.py` (2 locations)
+- ✅ Fixed empty except blocks in `probe_data_sources.py` (2 locations)
+- ✅ Added proper error logging with context messages
+- ✅ Consistent logging patterns established (see DEVELOPMENT.md)
+- ❌ Custom exception hierarchy not yet created
+- ❌ Retry logic for network operations not yet implemented
+- ❌ Pipeline validation checkpoints not yet added
+
 **Examples of Issues:**
 - What happens if OSMnx graph download fails mid-process?
 - How are missing geometries handled in walk time calculations?
 - What if Census API rate limit is hit?
 - No validation of intermediate outputs
 
-**Impact:**  
+**Impact:**
 - Hard to debug failures
 - Users don't know why operations failed
 - Data corruption risks
 - Poor user experience
 
-**Solution:**  
-1. Define error handling strategy and patterns
-2. Create custom exception hierarchy
-3. Add comprehensive logging with levels (DEBUG, INFO, WARNING, ERROR)
-4. Add validation checkpoints in pipeline
-5. Implement retry logic for network operations
-6. Add data validation before/after processing steps
-7. Create error recovery guide for common failures
-8. Add structured logging (JSON) for monitoring
+**Remaining Work:**
+1. ❌ Create custom exception hierarchy
+2. ❌ Add validation checkpoints in pipeline
+3. ❌ Implement retry logic for network operations
+4. ❌ Add data validation before/after processing steps
+5. ❌ Create error recovery guide for common failures
+6. ❌ Add structured logging (JSON) for monitoring
 
 **Specific Improvements:**
 - Add transaction-like behavior for data updates
@@ -787,11 +798,12 @@ Strengthen data validation throughout the pipeline.
 ---
 
 ### IMP-003: Documentation Improvements
-**Priority:** Medium  
-**Effort:** Medium (20-30 hours)  
+**Priority:** Medium
+**Effort:** Medium (20-30 hours) → **16-25 hours remaining**
+**Status:** 🔄 **IN PROGRESS** (2025-11-15)
 **Category:** Documentation
 
-**Description:**  
+**Description:**
 Enhance documentation for users, developers, and researchers.
 
 **Current State:**
@@ -802,37 +814,48 @@ Enhance documentation for users, developers, and researchers.
 - Test README
 - Notebooks demonstrate workflows
 
+**Progress (2025-11-15):**
+- ✅ Created DEVELOPMENT.md with developer guidelines
+- ✅ Documented logging best practices with code examples
+- ✅ Documented library vs entry point patterns
+- ✅ Documented TQDM integration
+- ✅ Created .env.example with environment variable documentation
+- ❌ No API documentation yet
+- ❌ No auto-generated docs yet
+- ❌ Contributing guidelines not yet created
+
 **Improvements Needed:**
 
 1. **API Documentation:**
-   - Auto-generated API docs (Sphinx/MkDocs)
-   - Module documentation
-   - Function signatures and examples
-   - Type hints throughout
+   - ❌ Auto-generated API docs (Sphinx/MkDocs)
+   - ❌ Module documentation
+   - ❌ Function signatures and examples
+   - ❌ Type hints throughout
 
 2. **User Guides:**
-   - Step-by-step tutorials
-   - Common workflows
-   - Troubleshooting guide (expand existing)
-   - FAQ section
+   - ❌ Step-by-step tutorials
+   - ❌ Common workflows
+   - ❌ Troubleshooting guide (expand existing)
+   - ❌ FAQ section
 
 3. **Developer Guides:**
-   - Contributing guidelines
-   - Code style guide
-   - Testing guide
-   - Release process
+   - ✅ Development best practices (DEVELOPMENT.md)
+   - ❌ Contributing guidelines (CONTRIBUTING.md)
+   - ❌ Code style guide
+   - ❌ Testing guide
+   - ❌ Release process
 
 4. **Research Documentation:**
-   - Methodology documentation
-   - Algorithm descriptions
-   - Validation approach
-   - Reproducibility guide
+   - ❌ Methodology documentation
+   - ❌ Algorithm descriptions
+   - ❌ Validation approach
+   - ❌ Reproducibility guide
 
 5. **Architecture Documentation:**
-   - System design
-   - Data flow diagrams (expand existing Mermaid)
-   - Module dependencies
-   - Extension points
+   - ❌ System design
+   - ❌ Data flow diagrams (expand existing Mermaid)
+   - ❌ Module dependencies
+   - ❌ Extension points
 
 **Tools:**
 - **Sphinx**: Python standard, autodoc
@@ -840,21 +863,23 @@ Enhance documentation for users, developers, and researchers.
 - **Jupyter Book**: Integrate notebooks
 - **Mermaid**: Diagrams (already used)
 
-**Implementation:**
+**Remaining Work:**
 1. Choose documentation tool
 2. Set up documentation structure
 3. Add docstrings throughout code
-4. Write guides and tutorials
-5. Deploy documentation site
+4. Write CONTRIBUTING.md
+5. Write guides and tutorials
+6. Deploy documentation site
 
 ---
 
 ### IMP-004: Improved Logging and Monitoring
-**Priority:** Medium  
-**Effort:** Medium (16-24 hours)  
+**Priority:** Medium
+**Effort:** Medium (16-24 hours) → **8-12 hours remaining**
+**Status:** 🔄 **IN PROGRESS** (2025-11-15)
 **Category:** Observability
 
-**Description:**  
+**Description:**
 Enhance logging for better debugging and monitoring.
 
 **Current State:**
@@ -863,15 +888,28 @@ Enhance logging for better debugging and monitoring.
 - No structured logging
 - No centralized log aggregation
 
+**Progress (2025-11-15):**
+- ✅ Replaced all print() statements with proper logging (4 files)
+- ✅ Established consistent logging patterns:
+  - Entry scripts use `logging.basicConfig()` with handlers
+  - Library modules use `logger = logging.getLogger(__name__)`
+- ✅ Created DEVELOPMENT.md with logging guidelines and examples
+- ✅ Documented integration with TQDM progress bars
+- ✅ Proper log levels used (DEBUG, INFO, WARNING, ERROR)
+- ❌ No structured logging (JSON) yet
+- ❌ No centralized log aggregation yet
+- ❌ No monitoring dashboards yet
+
 **Improvements:**
 
 1. **Structured Logging:**
-   - JSON format for machine parsing
-   - Consistent log levels
-   - Context information (user, region, operation)
-   - Request IDs for tracing
+   - ❌ JSON format for machine parsing
+   - ✅ Consistent log levels
+   - ❌ Context information (user, region, operation)
+   - ❌ Request IDs for tracing
 
 2. **Log Levels:**
+   - ✅ Properly applied throughout codebase
    ```python
    DEBUG: Detailed diagnostic info
    INFO: General informational messages
@@ -881,29 +919,28 @@ Enhance logging for better debugging and monitoring.
    ```
 
 3. **Performance Logging:**
-   - Operation timing
-   - Resource usage
-   - Progress tracking
-   - Bottleneck identification
+   - ❌ Operation timing
+   - ❌ Resource usage
+   - ❌ Progress tracking
+   - ❌ Bottleneck identification
 
 4. **Log Management:**
-   - Log rotation
-   - Compression
-   - Retention policy
-   - Search and analysis
+   - ❌ Log rotation
+   - ❌ Compression
+   - ❌ Retention policy
+   - ❌ Search and analysis
 
 5. **Monitoring:**
-   - Metrics collection (Prometheus)
-   - Dashboards (Grafana)
-   - Alerting
-   - Health checks
+   - ❌ Metrics collection (Prometheus)
+   - ❌ Dashboards (Grafana)
+   - ❌ Alerting
+   - ❌ Health checks
 
-**Implementation:**
-1. Add `structlog` library
-2. Create logging configuration
-3. Update all modules to use structured logging
-4. Set up log aggregation
-5. Create monitoring dashboards
+**Remaining Work:**
+1. Add `structlog` library for structured logging
+2. Add performance/timing logging
+3. Set up log rotation and management
+4. Create monitoring dashboards (optional)
 
 ---
 
@@ -1446,12 +1483,26 @@ For questions or to contribute:
 
 ---
 
-**Document Version:** 1.3  
-**Last Updated:** 2025-11-09  
-**Previous Version:** 1.2 (2025-11-09)  
+**Document Version:** 1.4
+**Last Updated:** 2025-11-15
+**Previous Version:** 1.3 (2025-11-09)
 **Analysis Method:** Comprehensive codebase review, dependency analysis, and best practices research
 
 **Revision Notes:**
+
+**v1.4 (2025-11-15):**
+- Updated TD-007 (Error Handling Strategy) - marked as IN PROGRESS
+  - Fixed 4 empty except blocks with proper error logging
+  - Documented progress and remaining work
+- Updated IMP-004 (Improved Logging and Monitoring) - marked as IN PROGRESS
+  - Replaced print() statements with proper logging in 4 files
+  - Established consistent logging patterns
+  - Created DEVELOPMENT.md with logging guidelines
+- Updated IMP-003 (Documentation Improvements) - marked as IN PROGRESS
+  - Created DEVELOPMENT.md with developer best practices
+  - Added .env.example for environment variable documentation
+- Updated effort estimates for in-progress items
+- Added recent completions section
 
 **v1.3 (2025-11-09):**
 - Added TD-011: H3 Not Used as Primary Geographic Unit (technical debt)

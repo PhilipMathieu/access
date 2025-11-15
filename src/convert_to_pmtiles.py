@@ -12,6 +12,17 @@ import sys
 from pathlib import Path
 import tempfile
 import shutil
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 
 def check_command(command: str) -> bool:
@@ -46,13 +57,13 @@ def convert_to_geojson(input_path: Path, output_path: Path, layer_name: str = No
         
         # Save as GeoJSON
         gdf.to_file(output_path, driver="GeoJSON")
-        print(f"Converted {input_path} to {output_path}")
+        logger.info(f"Converted {input_path} to {output_path}")
         return True
     except ImportError:
-        print("Error: geopandas not found. Please install geopandas.")
+        logger.error("geopandas not found. Please install geopandas.")
         return False
     except Exception as e:
-        print(f"Error converting {input_path}: {e}")
+        logger.error(f"Error converting {input_path}: {e}")
         return False
 
 
@@ -79,9 +90,9 @@ def convert_to_pmtiles(
         True if successful, False otherwise
     """
     if not check_command("tippecanoe"):
-        print("Error: tippecanoe not found. Please install tippecanoe (v2.17+).")
+        logger.error("tippecanoe not found. Please install tippecanoe (v2.17+).")
         return False
-    
+
     # Check tippecanoe version supports PMTiles
     try:
         version_result = subprocess.run(
@@ -91,9 +102,9 @@ def convert_to_pmtiles(
             check=True
         )
         version_str = version_result.stdout.strip()
-        print(f"Using tippecanoe: {version_str}")
+        logger.info(f"Using tippecanoe: {version_str}")
     except subprocess.CalledProcessError:
-        print("Warning: Could not check tippecanoe version")
+        logger.warning("Could not check tippecanoe version")
     
     cmd = [
         "tippecanoe",
@@ -115,10 +126,10 @@ def convert_to_pmtiles(
     
     try:
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        print(f"Converted {geojson_path} to {output_path}")
+        logger.info(f"Converted {geojson_path} to {output_path}")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"Error converting to PMTiles: {e.stderr}")
+        logger.error(f"Error converting to PMTiles: {e.stderr}")
         return False
 
 
@@ -211,9 +222,9 @@ def main():
     args = parser.parse_args()
     
     if not args.input.exists():
-        print(f"Error: Input file {args.input} does not exist")
+        logger.error(f"Input file {args.input} does not exist")
         sys.exit(1)
-    
+
     success = convert_file(
         args.input,
         args.output,
@@ -221,12 +232,12 @@ def main():
         args.min_zoom,
         args.max_zoom
     )
-    
+
     if success:
-        print(f"Successfully created {args.output}")
+        logger.info(f"Successfully created {args.output}")
         sys.exit(0)
     else:
-        print(f"Failed to create {args.output}")
+        logger.error(f"Failed to create {args.output}")
         sys.exit(1)
 
 

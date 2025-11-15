@@ -12,6 +12,7 @@ from typing import Dict, Tuple, Optional
 import json
 from datetime import datetime
 import re
+import logging
 
 # Set OSMnx cache folder
 ox.settings.cache_folder = "./cache/"
@@ -64,10 +65,10 @@ def get_remote_file_date(url: str) -> Optional[datetime]:
                 try:
                     from email.utils import parsedate_to_datetime
                     return parsedate_to_datetime(last_modified)
-                except (ValueError, TypeError):
-                    pass
-    except Exception:
-        pass
+                except (ValueError, TypeError) as e:
+                    logging.debug(f"Failed to parse Last-Modified header '{last_modified}': {e}")
+    except Exception as e:
+        logging.debug(f"Failed to get last modified date from {url}: {e}")
     return None
 
 
