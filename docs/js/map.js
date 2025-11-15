@@ -885,6 +885,44 @@ class ToolControl {
     onAdd(map) {
         this._map = map;
         
+        // Add print preview button (for development/testing)
+        const printPreviewButton = document.createElement('button');
+        printPreviewButton.id = 'print-preview-button';
+        printPreviewButton.className = 'maplibregl-ctrl-icon';
+        printPreviewButton.type = 'button';
+        printPreviewButton.innerHTML = '<i class="fas fa-eye"></i>';
+        printPreviewButton.title = 'Toggle Print Preview (for development)';
+        printPreviewButton.setAttribute('aria-label', 'Toggle print preview');
+        printPreviewButton.setAttribute('tabindex', '0');
+        printPreviewButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Toggle print preview mode
+            document.body.classList.toggle('print-preview');
+            const isPreview = document.body.classList.contains('print-preview');
+            
+            // Update button state
+            if (isPreview) {
+                printPreviewButton.classList.add('active');
+                printPreviewButton.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                printPreviewButton.title = 'Exit Print Preview';
+                // Wait for CSS to apply, then resize map to match new container size
+                setTimeout(() => {
+                    this._map.resize();
+                    updatePrintMetadata(this._map);
+                }, 50);
+            } else {
+                printPreviewButton.classList.remove('active');
+                printPreviewButton.innerHTML = '<i class="fas fa-eye"></i>';
+                printPreviewButton.title = 'Toggle Print Preview (for development)';
+                // Resize map back to normal view
+                setTimeout(() => {
+                    this._map.resize();
+                }, 50);
+            }
+        });
+        
         // Add print button
         const printButton = document.createElement('button');
         printButton.id = 'print-button';
@@ -898,13 +936,32 @@ class ToolControl {
             e.preventDefault();
             e.stopPropagation();
 
-            // Populate print metadata (IMP-009)
-            updatePrintMetadata(this._map);
+            // Get current map state
+            const center = this._map.getCenter();
+            const zoom = this._map.getZoom();
 
-            // Small delay to ensure metadata is updated before print dialog
+            // Navigate to print page with map state in URL
+            const printUrl = new URL('print.html', window.location.href);
+            printUrl.searchParams.set('center', `${center.lng},${center.lat}`);
+            printUrl.searchParams.set('zoom', zoom.toFixed(2));
+
+            // Open print page in new window
+            window.open(printUrl.toString(), '_blank');
+        });
+        
+        // Handle map resize when print dialog opens/closes
+        window.addEventListener('beforeprint', () => {
+            // Resize map to match print container dimensions
             setTimeout(() => {
-                window.print();
-            }, 100);
+                this._map.resize();
+            }, 10);
+        });
+        
+        window.addEventListener('afterprint', () => {
+            // Resize map back to normal viewport
+            setTimeout(() => {
+                this._map.resize();
+            }, 10);
         });
         printButton.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -913,45 +970,9 @@ class ToolControl {
             }
         });
         
-        // Add export button
-        const exportButton = document.createElement('button');
-        exportButton.id = 'export-button';
-        exportButton.className = 'maplibregl-ctrl-icon';
-        exportButton.type = 'button';
-        exportButton.innerHTML = '<i class="fas fa-download"></i>';
-        exportButton.title = 'Export Map';
-        exportButton.setAttribute('aria-label', 'Export map');
-        exportButton.setAttribute('tabindex', '0');
-        exportButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            // Export map as image - wait for map to render
-            this._map.once('idle', () => {
-                const canvas = this._map.getCanvas();
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'map-export.png';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }
-                }, 'image/png');
-            });
-        });
-        exportButton.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                exportButton.click();
-            }
-        });
-        
-        // Add buttons to container
+        // Add buttons to container (export button will be added by plugin separately)
+        this._container.appendChild(printPreviewButton);
         this._container.appendChild(printButton);
-        this._container.appendChild(exportButton);
         
         return this._container;
     }
@@ -965,7 +986,104 @@ class ToolControl {
 // Initialize tool controls on map load
 map.on('load', () => {
     map.addControl(new ToolControl(), 'top-right');
+    
+    // Add custom high-resolution PNG export button
+    // (mapbox-gl-export plugin not available via CDN, using custom implementation)
+    addFallbackExportButton();
 });
+
+// High-resolution PNG export function
+// Exports the current map view at higher resolution for better print quality
+function addFallbackExportButton() {
+    // Create export button in the tool control
+    const toolControl = document.querySelector('.maplibregl-ctrl-top-right .maplibregl-ctrl-group:last-child');
+    if (!toolControl) {
+        // Retry if tool control isn't ready yet
+        setTimeout(addFallbackExportButton, 100);
+        return;
+    }
+    
+    const exportButton = document.createElement('button');
+    exportButton.className = 'maplibregl-ctrl-icon';
+    exportButton.type = 'button';
+    exportButton.innerHTML = '<i class="fas fa-download"></i>';
+    exportButton.title = 'Export Map (High-Res PNG)';
+    exportButton.setAttribute('aria-label', 'Export map as high-resolution PNG');
+    exportButton.setAttribute('tabindex', '0');
+    
+    exportButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Show loading state
+        exportButton.disabled = true;
+        exportButton.title = 'Exporting...';
+        
+        // Wait for map to be fully rendered
+        map.once('idle', () => {
+            try {
+                // Export at 3x resolution for high-quality output (equivalent to ~300 DPI for typical screen)
+                const scale = 3;
+                const canvas = map.getCanvas();
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                // Create high-res canvas
+                const exportCanvas = document.createElement('canvas');
+                exportCanvas.width = width * scale;
+                exportCanvas.height = height * scale;
+                const ctx = exportCanvas.getContext('2d');
+                
+                // Use imageSmoothingEnabled for better quality
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                // Draw map canvas scaled up
+                ctx.drawImage(canvas, 0, 0, width * scale, height * scale);
+                
+                // Convert to blob and download
+                exportCanvas.toBlob((blob) => {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        const dateStr = new Date().toISOString().split('T')[0];
+                        a.download = `map-export-${dateStr}.png`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        console.log(`Exported map at ${width * scale}x${height * scale} resolution`);
+                    } else {
+                        console.error('Failed to create export blob');
+                    }
+                    
+                    // Reset button state
+                    exportButton.disabled = false;
+                    exportButton.title = 'Export Map (High-Res PNG)';
+                }, 'image/png', 1.0); // Maximum quality
+            } catch (error) {
+                console.error('Error exporting map:', error);
+                exportButton.disabled = false;
+                exportButton.title = 'Export Map (High-Res PNG)';
+            }
+        });
+        
+        // Trigger a render to ensure map is up to date
+        map.triggerRepaint();
+    });
+    
+    exportButton.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            exportButton.click();
+        }
+    });
+    
+    toolControl.appendChild(exportButton);
+    console.log('High-resolution PNG export button added');
+}
 
 // Keyboard navigation support (FR-003 - Accessibility)
 document.addEventListener('keydown', (e) => {

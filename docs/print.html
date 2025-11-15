@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Print Map - Access to Conservation Land in Maine</title>
+    <!-- MapLibre GL JS CSS -->
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Print page container - 8.5x11 inches portrait */
+        .print-page {
+            width: 8.5in;
+            height: 11in;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Top header - Title */
+        .print-header {
+            padding: 12pt 20pt;
+            border-bottom: 2pt solid #333;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .print-title h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .print-title .subtitle {
+            font-size: 12pt;
+            color: #666;
+            margin-top: 4pt;
+        }
+
+        /* Map area - takes up most of the space (80% height) */
+        .map-area {
+            flex: 1;
+            position: relative;
+            background: #e0e0e0;
+            min-height: 0; /* Allows flex item to shrink */
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Map overlays - scale bar and north arrow positioned on map */
+        .map-overlay {
+            position: absolute;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        /* Scale bar - bottom left on map */
+        .map-overlay.print-scale {
+            bottom: 15pt;
+            left: 15pt;
+            background: white;
+            border: 1.5pt solid #333;
+            padding: 6pt 8pt;
+            box-shadow: 0 2pt 6pt rgba(0,0,0,0.3);
+        }
+
+        .print-scale .scale-label {
+            text-align: center;
+            font-size: 8pt;
+            margin: 2pt 0 0 0;
+            color: #333;
+            line-height: 1.2;
+        }
+
+        .print-scale .scale-bar {
+            width: 40mm;
+            height: 4pt;
+            border: 1pt solid #333;
+            border-top: none;
+            position: relative;
+            margin: 4pt 0;
+        }
+
+        .print-scale .scale-bar::before,
+        .print-scale .scale-bar::after {
+            content: '';
+            position: absolute;
+            top: -4pt;
+            width: 1pt;
+            height: 4pt;
+            background: #333;
+        }
+
+        .print-scale .scale-bar::before {
+            left: 0;
+        }
+
+        .print-scale .scale-bar::after {
+            right: 0;
+        }
+
+        /* North arrow - upper right on map */
+        .map-overlay.print-north {
+            top: 15pt;
+            right: 15pt;
+            width: 35pt;
+            height: 50pt;
+            background: white;
+            border: 1.5pt solid #333;
+            border-radius: 3pt;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2pt 6pt rgba(0,0,0,0.3);
+        }
+
+        .print-north::before {
+            content: '▲';
+            font-size: 24pt;
+            font-weight: bold;
+            color: #333;
+            line-height: 1;
+        }
+
+        .print-north::after {
+            content: 'N';
+            font-size: 11pt;
+            font-weight: bold;
+            color: #333;
+            margin-top: 3pt;
+        }
+
+        /* Bottom section - Legend and attribution */
+        .print-footer {
+            padding: 12pt 20pt;
+            border-top: 1pt solid #ccc;
+            flex-shrink: 0;
+            display: grid;
+            grid-template-columns: 8fr 4fr;
+            gap: 12pt;
+        }
+
+        .print-footer-left {
+            grid-column: 1;
+        }
+
+        .print-footer-right {
+            grid-column: 2;
+        }
+
+        /* Horizontal legend - multi-column layout */
+        .map-legend {
+            background: white;
+            border: 1.5pt solid #333;
+            padding: 10pt;
+            margin-bottom: 8pt;
+            box-shadow: 0 2pt 4pt rgba(0,0,0,0.1);
+        }
+
+        .map-legend .legend-header {
+            margin-bottom: 8pt;
+            border-bottom: 1.5pt solid #666;
+            padding-bottom: 6pt;
+        }
+
+        .map-legend .legend-header h5 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin: 0;
+            color: #333;
+        }
+
+        .map-legend .legend-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12pt 16pt;
+            align-items: start;
+        }
+
+        .map-legend .legend-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-legend .legend-section-title {
+            font-size: 10pt;
+            display: block;
+            margin: 0 0 6pt 0;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .map-legend .legend-section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .map-legend .legend-item {
+            font-size: 9pt;
+            margin: 3pt 0;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+        }
+
+        .map-legend .legend-color {
+            width: 14pt;
+            height: 10pt;
+            border: 0.5pt solid #666;
+            margin-right: 6pt;
+            flex-shrink: 0;
+        }
+
+        /* About this map box */
+        .about-this-map {
+            background: white;
+            border: 1.5pt solid #333;
+            padding: 10pt;
+            box-shadow: 0 2pt 4pt rgba(0,0,0,0.1);
+        }
+
+        .about-this-map .about-header {
+            margin-bottom: 8pt;
+            border-bottom: 1.5pt solid #666;
+            padding-bottom: 6pt;
+        }
+
+        .about-this-map .about-header h5 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin: 0;
+            color: #333;
+        }
+
+        .about-this-map .about-content {
+            font-size: 8pt;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .about-this-map .about-content p {
+            margin: 0 0 6pt 0;
+        }
+
+        .about-this-map .about-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Attribution footer */
+        .print-attribution {
+            text-align: center;
+            font-size: 8pt;
+            color: #555;
+            line-height: 1.5;
+            grid-column: 1 / -1;
+            margin-top: 8pt;
+        }
+
+        /* Hide MapLibre attribution in print */
+        .maplibregl-ctrl-attrib {
+            display: none !important;
+        }
+
+        /* Controls outside print area */
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #508142;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            background: #3d6a33;
+        }
+
+        .btn-secondary {
+            background: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #555;
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .print-page {
+                box-shadow: none;
+                width: 100%;
+                height: 100vh;
+            }
+
+            .controls {
+                display: none;
+            }
+
+            /* Ensure colors print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Controls (hidden when printing) -->
+    <div class="controls">
+        <button class="btn btn-secondary" onclick="window.close()">Close</button>
+        <button class="btn" onclick="window.print()">Print</button>
+    </div>
+
+    <!-- Print page layout -->
+    <div class="print-page">
+        <!-- Top header - Title -->
+        <div class="print-header">
+            <div class="print-title">
+                <h1>Access to Conservation Land in Maine</h1>
+                <p class="subtitle">Walk Time Analysis by Census Block</p>
+            </div>
+        </div>
+
+        <!-- Map area with overlays -->
+        <div class="map-area">
+            <div id="map"></div>
+            
+            <!-- Scale bar overlay on map -->
+            <div class="map-overlay print-scale">
+                <div class="scale-bar"></div>
+                <div class="scale-label" id="print-scale-distance">0 — 5 km</div>
+            </div>
+
+            <!-- North arrow overlay on map -->
+            <div class="map-overlay print-north"></div>
+        </div>
+
+        <!-- Bottom footer - Legend and attribution -->
+        <div class="print-footer">
+            <!-- Left side: Legend -->
+            <div class="print-footer-left">
+                <div class="map-legend" id="print-legend">
+                    <div class="legend-header">
+                        <h5>Map Legend</h5>
+                    </div>
+                    <div class="legend-content">
+                        <!-- Left column: Walk times -->
+                        <div class="legend-column">
+                            <strong class="legend-section-title">Walk Time to Conserved Land:</strong>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #508142; opacity: 1.0;"></div>
+                                <span>&lt;5 min walk</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #508142; opacity: 0.8;"></div>
+                                <span>5-10 min walk</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #508142; opacity: 0.6;"></div>
+                                <span>10-15 min walk</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #508142; opacity: 0.5;"></div>
+                                <span>15-20 min walk</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #508142; opacity: 0.3;"></div>
+                                <span>20-30 min walk</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #508142; opacity: 0.15;"></div>
+                                <span>30-45 min walk</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #508142; opacity: 0.0;"></div>
+                                <span>45-60 min walk</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: transparent; border: 1pt solid #999;"></div>
+                                <span>No access</span>
+                            </div>
+                        </div>
+                        <!-- Right column: Other layers -->
+                        <div class="legend-column">
+                            <strong class="legend-section-title">Layers:</strong>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background-color: #508142; opacity: 0.6;"></div>
+                                <span>Conserved Lands</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: repeating-linear-gradient(45deg, transparent, transparent 2px, #d54400 2px, #d54400 4px);"></div>
+                                <span>Disadvantaged (CEJST)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right side: About this map -->
+            <div class="print-footer-right">
+                <div class="about-this-map">
+                    <div class="about-header">
+                        <h5>About This Map</h5>
+                    </div>
+                    <div class="about-content">
+                        <p><strong>Methodology:</strong> Walk times are calculated using network analysis on OpenStreetMap street networks. The analysis uses bounded Dijkstra's algorithm to find the shortest walking path from each census block centroid to conserved lands. For more details, see <a href="https://philipmathieu.github.io/access" target="_blank" style="color: #508142; text-decoration: underline;">philipmathieu.github.io/access</a>.</p>
+                        <p><strong>Walking Speed:</strong> 4.5 km/h (based on pedestrian research)</p>
+                        <p><strong>Time Thresholds:</strong> 5, 10, 15, 20, 30, 45, and 60 minutes</p>
+                        <p><strong>Geography:</strong> 2020 Census blocks with centroids mapped to nearest street network node</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attribution footer (spans both columns) -->
+            <div class="print-attribution" id="print-attribution">
+                <span id="print-date-footer"></span> | 
+                Center: <span id="print-center"></span> | 
+                Zoom: <span id="print-zoom"></span> | 
+                Data: OpenStreetMap, US Census, Maine GeoLibrary, CEJST | 
+                © 2025 Philip Mathieu
+            </div>
+        </div>
+    </div>
+
+    <!-- MapLibre GL JS -->
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <!-- PMTiles -->
+    <script src="https://unpkg.com/pmtiles@3.2.0/dist/pmtiles.js"></script>
+    <script src="js/print-map.js"></script>
+</body>
+</html>
