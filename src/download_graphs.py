@@ -1,13 +1,20 @@
 import osmnx as ox
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 ox.settings.cache_folder = "./cache/"
 ox.settings.log_console = True
-logging.info(f"Using OSMnx version {ox.__version__}")
-logging.warning("This script requires >10GB RAM available")
+logger.info(f"Using OSMnx version {ox.__version__}")
+logger.warning("This script requires >10GB RAM available")
 
 # download/model a network of driving routes for the state of Maine
 G = ox.graph_from_place({"state": "Maine"}, network_type="drive")
