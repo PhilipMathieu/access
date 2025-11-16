@@ -101,7 +101,7 @@ Project uses OSMnx 1.3.0 (pinned), but latest stable version is 2.0+ (as of 2025
 ### TD-003: Mixed Import Patterns for H3 Module
 **Priority:** Medium
 **Effort:** Small (4-8 hours)
-**Status:** ✅ **COMPLETED** (2025-01-XX)
+**Status:** ✅ **COMPLETED** (2025-11-15)
 **Category:** Code Quality
 
 **Description:**
@@ -114,6 +114,8 @@ The `src/h3/` module used an inconsistent import pattern due to naming conflict 
 4. ✅ Updated documentation (`README.md`)
 5. ✅ Removed mypy exclude for h3 module (no longer needed)
 6. ✅ Updated pre-commit configuration
+
+**Note:** Some legacy notebooks still use `from h3utils import *` (referring to `src/h3utils.py`, a separate utility file). The `src/h3_utils/` package directory is properly renamed and used throughout the main codebase.
 
 **Files Modified:**
 - `src/h3_utils/` (renamed from `src/h3/`)
@@ -814,7 +816,7 @@ Enhance documentation for users, developers, and researchers.
 - ✅ Documented logging best practices with code examples
 - ✅ Documented library vs entry point patterns
 - ✅ Documented TQDM integration
-- ✅ Created .env.example with environment variable documentation
+- ❌ .env.example not yet created (mentioned but file doesn't exist)
 - ❌ No API documentation yet
 - ❌ No auto-generated docs yet
 - ❌ Contributing guidelines not yet created
@@ -884,7 +886,8 @@ Enhance logging for better debugging and monitoring.
 - No centralized log aggregation
 
 **Progress (2025-11-15):**
-- ✅ Replaced all print() statements with proper logging (4 files)
+- ✅ Replaced print() statements with proper logging in library modules
+- ⚠️ CLI scripts (`probe_data_sources.py`, `changelog.py`) still use print() for user-facing output (acceptable for CLI)
 - ✅ Established consistent logging patterns:
   - Entry scripts use `logging.basicConfig()` with handlers
   - Library modules use `logger = logging.getLogger(__name__)`
@@ -1489,26 +1492,37 @@ For questions or to contribute:
 
 ---
 
-**Document Version:** 1.4
+**Document Version:** 1.4.1
 **Last Updated:** 2025-11-15
-**Previous Version:** 1.3 (2025-11-09)
+**Previous Version:** 1.4 (2025-11-15)
 **Analysis Method:** Comprehensive codebase review, dependency analysis, and best practices research
 
 **Revision Notes:**
+
+**v1.4.1 (2025-11-15):**
+- Accuracy verification: Reviewed all status indicators against actual codebase
+- Corrected IMP-003: .env.example not yet created (was incorrectly marked as completed)
+- Clarified IMP-004: Print statements in CLI scripts are acceptable for user-facing output
+- Updated TD-003: Fixed completion date placeholder and added note about legacy notebooks
+- Verified TD-009, IMP-005, IMP-006, FR-003, IMP-009 completion status (all accurate)
 
 **v1.4 (2025-11-15):**
 - Updated TD-007 (Error Handling Strategy) - marked as IN PROGRESS
   - Fixed 4 empty except blocks with proper error logging
   - Documented progress and remaining work
 - Updated IMP-004 (Improved Logging and Monitoring) - marked as IN PROGRESS
-  - Replaced print() statements with proper logging in 4 files
+  - Replaced print() statements with proper logging in library modules
+  - CLI scripts still use print() for user-facing output (acceptable)
   - Established consistent logging patterns
   - Created DEVELOPMENT.md with logging guidelines
 - Updated IMP-003 (Documentation Improvements) - marked as IN PROGRESS
   - Created DEVELOPMENT.md with developer best practices
-  - Added .env.example for environment variable documentation
+  - Corrected: .env.example not yet created (was incorrectly marked as completed)
+- Updated TD-003 (H3 Module Import Pattern) - corrected completion date from placeholder
+  - Added note about legacy notebooks using separate h3utils.py file
 - Updated effort estimates for in-progress items
 - Added recent completions section
+- Verified accuracy of all status indicators against codebase
 
 **v1.3 (2025-11-09):**
 - Added TD-011: H3 Not Used as Primary Geographic Unit (technical debt)
