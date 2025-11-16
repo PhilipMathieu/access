@@ -78,4 +78,3 @@ python src/find_centroids.py -g data/graphs/maine_walk.graphml input.shp -o _cus
 - Analysis region: Maine state
 - Primary unit: Census blocks
 - Key threshold: 10-minute walk
-

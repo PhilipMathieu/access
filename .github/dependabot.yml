@@ -1,0 +1,44 @@
+# Dependabot configuration for automated dependency updates
+# See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Note: This project uses uv for dependency management (pyproject.toml + uv.lock)
+# As of March 2025, Dependabot natively supports the "uv" package-ecosystem
+# See: https://github.blog/changelog/2025-03-13-dependabot-version-updates-now-support-uv-in-general-availability/
+
+version: 2
+updates:
+  # Monitor Python dependencies (managed by uv)
+- package-ecosystem: uv
+  directory: /
+  schedule:
+    interval: weekly
+    day: monday
+    time: 09:00
+  open-pull-requests-limit: 5
+  labels:
+  - dependencies
+  - python
+  commit-message:
+    prefix: deps
+    include: scope
+  reviewers:
+  - PhilipMathieu
+    # Group minor and patch updates together
+  groups:
+    minor-and-patch:
+      patterns:
+      - '*'
+      update-types:
+      - minor
+      - patch
+
+  # Monitor GitHub Actions
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: monthly
+  labels:
+  - dependencies
+  - github-actions
+  commit-message:
+    prefix: ci

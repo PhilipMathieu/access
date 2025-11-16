@@ -35,7 +35,7 @@ graph TD
     REDISTRICT["P.L. 94-171 Redistricting Data<br/>(block level)<br/>───────────<br/>GEOID20 (block)<br/>P1_001N - Population<br/>..."]
     RELATIONSHIP["Relationship File 2020 (block level)<br/>───────────<br/>GEOID10 (tract)<br/>GEOID20 (block)<br/>ALAND_2020<br/>AWATER_2020<br/>ALAND_INT<br/>AWATER_INT<br/>..."]
     CEJST["CEJST 1.0 (shapefile, tract level)<br/>───────────<br/>GEOID10 (tract)<br/>Basic Demographics<br/>Total Threshold Criteria Exceeded<br/>Total Categories Exceeded<br/>..."]
-    
+
     %% Processing nodes
     OSM["OpenStreetMap<br/>Network (graphml)<br/>───────────<br/>Nodes (lat/lon)<br/>Edges (distance,<br/>walking time)<br/>..."]
     EGO["Ego Graph Analysis<br/>to find Conserved<br/>Lands within Certain<br/>Walk Times<br/>(isochrones) of each<br/>Census Block"]
@@ -44,7 +44,7 @@ graph TD
     WALK2["Blocks with Walk Times and<br/>Demographics<br/>───────────<br/>GEOID20 (block)<br/>block_osmid<br/>land_osmid<br/>trip_time<br/>population<br/>population density"]
     JOIN2["Join on GEOID20,<br/>weighting CEJST<br/>variables by the area<br/>within each tract using the<br/>Relationship File"]
     FINAL["Blocks with Walk Times,<br/>Demographics, Equity Statistics<br/>───────────<br/>GEOID20 (block)<br/>block_osmid<br/>land_osmid<br/>trip_time<br/>population<br/>Total Threshold Criteria Exceeded<br/>Total Categories Exceeded"]
-    
+
     %% Connections
     TIGER --> OSM
     CONSERVED --> OSM
@@ -59,13 +59,13 @@ graph TD
     RELATIONSHIP --> JOIN2
     CEJST --> JOIN2
     JOIN2 --> FINAL
-    
+
     %% Styling
     classDef censusData fill:#FFE680,stroke:#333,stroke-width:2px
     classDef externalData fill:#90EE90,stroke:#333,stroke-width:2px
     classDef generatedData fill:#FFB6C1,stroke:#333,stroke-width:2px
     classDef processNode fill:#E8E8E8,stroke:#333,stroke-width:2px
-    
+
     class TIGER,REDISTRICT,RELATIONSHIP,CEJST censusData
     class CONSERVED,OSM externalData
     class WALK1,WALK2,FINAL generatedData
@@ -112,7 +112,7 @@ This project uses `uv` for Python environment and package management.
    ```bash
    # Make sure the venv is activated first
    source .venv/bin/activate  # or `.venv\Scripts\activate` on Windows
-   
+
    # Register the kernel using the venv python
    .venv/bin/python -m ipykernel install --user --name access --display-name "Python 3 (access)"
    ```
@@ -231,13 +231,13 @@ generate_all_figures(
 )
 ```
 
-### H3 (`src/h3/`)
+### H3 (`src/h3_utils/`)
 
 H3 hexagon spatial indexing:
 
 ```python
-from h3.relationship import generate_h3_relationship_area
-from h3.joins import h3_join
+from h3_utils.relationship import generate_h3_relationship_area
+from h3_utils.joins import h3_join
 
 # Generate H3 relationship file
 generate_h3_relationship_area(
@@ -282,4 +282,3 @@ http-server -p 8000 --cors
 The site will be available at `http://localhost:8000`. The `--cors` flag enables Cross-Origin Resource Sharing, which is important for PMTiles to work correctly.
 
 **Note:** Python's `http.server` does not support HTTP range requests, which are required for PMTiles. Use `http-server` instead for local testing.
-

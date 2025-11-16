@@ -2,27 +2,25 @@
 
 import sys
 from pathlib import Path
+from unittest.mock import Mock
+
+import geopandas as gpd
+import networkx as nx
+import pandas as pd
+import pytest
+from shapely.geometry import Point
 
 # Add src directory to path for imports
 src_path = Path(__file__).parent.parent / "src"
 if str(src_path) not in sys.path:
     sys.path.insert(0, str(src_path))
 
-import pytest
-import numpy as np
-import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Point
-import networkx as nx
-import rustworkx as rx
-from unittest.mock import Mock, MagicMock
-
 
 @pytest.fixture
 def sample_graph():
     """Create a simple NetworkX graph for testing."""
     G = nx.MultiDiGraph()
-    
+
     # Add nodes with coordinates
     nodes = [
         (1, {"x": 0, "y": 0}),
@@ -31,7 +29,7 @@ def sample_graph():
         (4, {"x": 100, "y": 100}),
     ]
     G.add_nodes_from(nodes)
-    
+
     # Add edges with length and time attributes
     edges = [
         (1, 2, {"length": 100.0, "time": 1.0}),  # 100m, 1 minute
@@ -40,7 +38,7 @@ def sample_graph():
         (4, 3, {"length": 141.4, "time": 1.4}),
     ]
     G.add_edges_from(edges)
-    
+
     return G
 
 
@@ -48,10 +46,8 @@ def sample_graph():
 def sample_rustworkx_graph(sample_graph):
     """Create a rustworkx graph from sample NetworkX graph."""
     from walk_times.graph_utils import nx_to_rustworkx
-    
-    rx_graph, nx_id_to_rx_idx, rx_idx_to_nx_id = nx_to_rustworkx(
-        sample_graph, weight_attr="time"
-    )
+
+    rx_graph, nx_id_to_rx_idx, rx_idx_to_nx_id = nx_to_rustworkx(sample_graph, weight_attr="time")
     return rx_graph, nx_id_to_rx_idx, rx_idx_to_nx_id
 
 
@@ -104,10 +100,7 @@ def sample_merged_blocks_gdf(sample_blocks_gdf, sample_walk_times_df):
     """Create a sample merged blocks GeoDataFrame."""
     # Merge walk times with blocks
     merged = sample_blocks_gdf.merge(
-        sample_walk_times_df,
-        left_on="osmid",
-        right_on="block_osmid",
-        how="left"
+        sample_walk_times_df, left_on="osmid", right_on="block_osmid", how="left"
     )
     return merged
 
@@ -123,9 +116,9 @@ def sample_census_data():
         ],
         "GEOID20": ["230010001001", "230010001002", "230010001003"],
         "P1_001N": [100, 200, 150],  # Total population
-        "P1_003N": [80, 150, 120],   # White population
+        "P1_003N": [80, 150, 120],  # White population
         "P2_001N": [100, 200, 150],  # Hispanic or Latino (total)
-        "P2_002N": [5, 10, 8],       # Hispanic or Latino (yes)
+        "P2_002N": [5, 10, 8],  # Hispanic or Latino (yes)
     }
     return pd.DataFrame(data)
 
@@ -205,13 +198,13 @@ def mock_census_api():
 @pytest.fixture
 def region_config_maine():
     """Create a RegionConfig for Maine."""
-    from config.regions import RegionConfig
     from pathlib import Path
-    
+
+    from config.regions import RegionConfig
+
     return RegionConfig(
         state_fips="23",
         state_abbrev="ME",
         state_name="Maine",
         data_root=Path("data"),
     )
-

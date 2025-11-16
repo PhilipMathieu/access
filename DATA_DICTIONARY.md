@@ -34,10 +34,10 @@ To update the webmap with new data:
    ```bash
    # Blocks
    python src/convert_to_pmtiles.py data/joins/block_dissolve.shp.zip docs/data/blocks.pmtiles -l blocks
-   
+
    # Conserved Lands
    python src/convert_to_pmtiles.py data/conserved_lands/*_with_nodes.shp.zip docs/data/conserved_lands.pmtiles -l conserved_lands
-   
+
    # CEJST
    python src/convert_to_pmtiles.py data/cejst-maine.shp docs/data/cejst.pmtiles -l cejst
    ```
@@ -133,7 +133,7 @@ These are intermediate files created during data processing. They include additi
 **Columns Added**:
 - `osmid`: OSMnx node ID (for routing/walk time calculations)
 
-**Usage**: 
+**Usage**:
 - Input for walk time calculations
 - Source for webmap PMTiles generation
 
@@ -157,7 +157,7 @@ These are intermediate files created during data processing. They include additi
 **Columns Added**:
 - `osmid`: OSMnx node ID
 
-**Usage**: 
+**Usage**:
 - Source for webmap PMTiles generation
 - Analysis of conserved land accessibility
 
@@ -293,10 +293,10 @@ If you need to update everything from source:
    ```bash
    # Blocks
    python src/convert_to_pmtiles.py data/joins/block_dissolve.shp.zip docs/data/blocks.pmtiles -l blocks
-   
+
    # Conserved Lands
    python src/convert_to_pmtiles.py data/conserved_lands/*_with_nodes.shp.zip docs/data/conserved_lands.pmtiles -l conserved_lands
-   
+
    # CEJST
    python src/convert_to_pmtiles.py data/cejst-maine.shp docs/data/cejst.pmtiles -l cejst
    ```
@@ -408,4 +408,3 @@ Analysis notebooks may use:
 - **Data Source Configuration**: See `src/probe_data_sources.py` for all data source URLs
 - **Validation**: Run `python src/validate_data.py` to validate data files
 - **Processing**: See `src/process_updated_data.py` for processing functions
-

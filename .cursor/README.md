@@ -19,4 +19,3 @@ These documents are designed to help:
 ## Project Summary
 
 The Access project analyzes spatial accessibility to conservation land in Maine, calculating walking times from Census block centroids to conserved properties and analyzing demographic disparities, particularly for CEJST-identified disadvantaged communities.
-
