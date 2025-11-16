@@ -27,7 +27,7 @@ ox.settings.cache_folder = "./cache/"
 
 def find_shapefiles_in_directory(directory: Path) -> list[Path]:
     """Find all shapefiles in a directory."""
-    shapefiles = []
+    shapefiles: list[Path] = []
 
     if not directory.exists():
         return shapefiles
@@ -202,7 +202,7 @@ def validate_processed_file(file_path: Path) -> bool:
 def process_updated_data_sources(sources: list[str] | None = None) -> dict[str, bool]:
     """Process data sources that have been updated."""
     metadata = load_metadata()
-    results = {}
+    results: dict[str, bool] = {}
 
     # Map source names to processing functions
     processing_functions = {

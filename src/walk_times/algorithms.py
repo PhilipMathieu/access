@@ -136,8 +136,8 @@ def calculate_walk_times_parallel(
     graph: nx.MultiDiGraph,
     conserved_lands: gpd.GeoDataFrame,
     trip_times: list[int],
-    n_jobs: int = None,
-    geography_type: str = None,
+    n_jobs: int | None = None,
+    geography_type: str | None = None,
     progress_bar: bool = True,
 ) -> pd.DataFrame:
     """

@@ -20,7 +20,9 @@ def check_command(command: str) -> bool:
 
 
 def convert_to_geojson(
-    input_path: Path, output_path: Path, layer_name: str | None = None  # noqa: ARG001
+    input_path: Path,
+    output_path: Path,
+    layer_name: str | None = None,  # noqa: ARG001
 ) -> bool:
     """
     Convert shapefile, GeoJSON, or Parquet to GeoJSON in EPSG:4326 using GeoPandas.

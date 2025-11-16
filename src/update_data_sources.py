@@ -285,6 +285,7 @@ def update_all_sources(force: bool = False) -> dict[str, bool]:
         source_metadata = metadata.get(name, {})
 
         if force or source_metadata.get("update_available", False):
+            assert isinstance(config, dict)
             success = update_data_source(name, config)
             results[name] = success
         else:
@@ -315,7 +316,9 @@ def main():
     if args.source:
         # Update single source
         if args.source in DATA_SOURCES:
-            success = update_data_source(args.source, DATA_SOURCES[args.source])
+            config = DATA_SOURCES[args.source]
+            assert isinstance(config, dict)
+            success = update_data_source(args.source, config)
             sys.exit(0 if success else 1)
         else:
             print(f"Error: Source '{args.source}' not found")

@@ -9,6 +9,7 @@ import re
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import osmnx as ox
 import requests
@@ -20,12 +21,13 @@ ox.settings.cache_folder = "./cache/"
 METADATA_FILE = Path("data/data_source_metadata.json")
 
 
-def load_metadata() -> dict:
+def load_metadata() -> dict[str, Any]:
     """Load data source metadata from file."""
     if METADATA_FILE.exists():
         try:
             with open(METADATA_FILE) as f:
-                return json.load(f)
+                result: dict[str, Any] = json.load(f)
+                return result
         except (OSError, json.JSONDecodeError):
             return {}
     return {}
@@ -64,7 +66,9 @@ def get_remote_file_date(url: str) -> datetime | None:
                 try:
                     from email.utils import parsedate_to_datetime
 
-                    return parsedate_to_datetime(last_modified)
+                    result = parsedate_to_datetime(last_modified)
+                    if isinstance(result, datetime):
+                        return result
                 except (ValueError, TypeError):
                     pass
     except Exception:
@@ -136,7 +140,8 @@ DATA_SOURCES = {
 
 
 def test_osmnx_source(
-    name: str, config: dict  # noqa: ARG001
+    name: str,
+    config: dict,  # noqa: ARG001
 ) -> tuple[bool, str | None, dict | None]:
     """Test OSMnx data source availability."""
     metadata = load_metadata()
@@ -336,7 +341,8 @@ def test_arcgis_source(name: str, config: dict) -> tuple[bool, str | None, dict 
 
 
 def test_census_api(
-    name: str, config: dict  # noqa: ARG001
+    name: str,
+    config: dict,  # noqa: ARG001
 ) -> tuple[bool, str | None, dict | None]:
     """Test Census API availability (requires API key)."""
     metadata = load_metadata()
@@ -411,6 +417,7 @@ def main():
     updates_available = []
 
     for name, config in DATA_SOURCES.items():
+        assert isinstance(config, dict)
         is_available, message, metadata = probe_data_source(name, config)
         results[name] = {"available": is_available, "message": message, "metadata": metadata}
 

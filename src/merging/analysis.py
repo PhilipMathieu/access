@@ -52,7 +52,7 @@ def _get_cache_path(
 
 def fetch_census_data(
     api_key: str | None = None,
-    state_fips: str | int = None,
+    state_fips: str | int | None = None,
     fields: list[str] | None = None,
     year: int = DEFAULT_CENSUS_YEAR,
     region_config: RegionConfig | None = None,
@@ -280,9 +280,9 @@ def calculate_demographics(blocks_df: pd.DataFrame) -> pd.DataFrame:
 def create_ejblocks(
     blocks_path: str | Path,
     census_api_key: str | None = None,
-    cejst_path: str | Path = None,
-    relationship_file_path: str | Path = None,
-    output_path: str | Path = None,
+    cejst_path: str | Path | None = None,
+    relationship_file_path: str | Path | None = None,
+    output_path: str | Path | None = None,
     state_fips: str | int | None = None,
     region_config: RegionConfig | None = None,
     refresh_cache: bool = False,
@@ -347,6 +347,8 @@ def create_ejblocks(
 
     # Process CEJST data
     logger.info("Processing CEJST data")
+    if cejst_path is None or relationship_file_path is None:
+        raise ValueError("cejst_path and relationship_file_path must be provided")
     cejst_block = process_cejst_data(cejst_path, relationship_file_path)
 
     # Merge CEJST data

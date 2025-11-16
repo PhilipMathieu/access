@@ -8,17 +8,19 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 # Changelog file
 CHANGELOG_FILE = Path("data/CHANGELOG.json")
 
 
-def load_changelog() -> list[dict]:
+def load_changelog() -> list[dict[str, Any]]:
     """Load changelog from file."""
     if CHANGELOG_FILE.exists():
         try:
             with open(CHANGELOG_FILE) as f:
-                return json.load(f)
+                result: list[dict[str, Any]] = json.load(f)
+                return result
         except (OSError, json.JSONDecodeError):
             return []
     return []
