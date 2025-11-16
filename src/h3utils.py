@@ -51,13 +51,13 @@ def h3_merge(df, reln=None, inplace=False, resolution=None, region_config=None):
 
 # Summarize a given column by h3 fraction
 def h3_weight(df, col, prefix="h3_"):
-    logger.info(f"Creating {prefix+col}")
+    logger.info(f"Creating {prefix + col}")
     df[prefix + col] = df[col] * df["h3_fraction"]
 
 
 # Summarize a given column by h3 fraction, further weighting by population fraction
 def h3_weight_pop(df, col, prefix="h3_"):
-    logger.info(f"Creating {prefix+col}")
+    logger.info(f"Creating {prefix + col}")
     df[prefix + col] = df[col] * df["P1_001N"] * df["h3_fraction"]
 
 

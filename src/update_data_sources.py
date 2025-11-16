@@ -285,7 +285,8 @@ def update_all_sources(force: bool = False) -> dict[str, bool]:
         source_metadata = metadata.get(name, {})
 
         if force or source_metadata.get("update_available", False):
-            assert isinstance(config, dict)
+            if not isinstance(config, dict):
+                raise TypeError(f"Config for {name} must be a dict, got {type(config)}")
             success = update_data_source(name, config)
             results[name] = success
         else:
@@ -317,7 +318,8 @@ def main():
         # Update single source
         if args.source in DATA_SOURCES:
             config = DATA_SOURCES[args.source]
-            assert isinstance(config, dict)
+            if not isinstance(config, dict):
+                raise TypeError(f"Config for {args.source} must be a dict, got {type(config)}")
             success = update_data_source(args.source, config)
             sys.exit(0 if success else 1)
         else:
