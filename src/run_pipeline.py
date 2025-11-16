@@ -23,9 +23,9 @@ from dotenv import load_dotenv
 
 from config.defaults import DEFAULT_H3_RESOLUTION_AREA, DEFAULT_TRAVEL_SPEED, DEFAULT_TRIP_TIMES
 from config.regions import get_region_config
+from h3_utils.relationship import generate_h3_relationship_area
 from merging.analysis import create_ejblocks
 from merging.blocks import dissolve_blocks, merge_walk_times
-from src.h3.relationship import generate_h3_relationship_area
 from visualization.figures import generate_all_figures
 from walk_times.calculate import process_walk_times
 

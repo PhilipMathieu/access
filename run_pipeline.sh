@@ -152,7 +152,7 @@ import os
 os.chdir('..')  # Change back to project root
 from config.regions import get_region_config
 from config.defaults import DEFAULT_H3_RESOLUTION_AREA
-from h3.relationship import generate_h3_relationship_area
+from h3_utils.relationship import generate_h3_relationship_area
 from pathlib import Path
 
 region_config = get_region_config('Maine')

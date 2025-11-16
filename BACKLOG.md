@@ -98,43 +98,27 @@ Project uses OSMnx 1.3.0 (pinned), but latest stable version is 2.0+ (as of 2025
 ### TD-003: Mixed Import Patterns for H3 Module
 **Priority:** Medium
 **Effort:** Small (4-8 hours)
+**Status:** ✅ **COMPLETED** (2025-01-XX)
 **Category:** Code Quality
 
 **Description:**
-The `src/h3/` module uses an inconsistent import pattern due to naming conflict with the installed `h3` library:
-- Comment in `pyproject.toml`: "Import h3 modules using: from src.h3.relationship import ..."
-- Not installed as a top-level package
-- May cause confusion and import errors
+The `src/h3/` module used an inconsistent import pattern due to naming conflict with the installed `h3` library. This has been resolved by renaming the module to `src/h3_utils/`.
 
-**Current State:**
-```python
-# pyproject.toml line 40-41
-# Note: src/h3 is not installed as a top-level package to avoid conflict
-# with the installed h3 library
-```
+**Completed Implementation:**
+1. ✅ Renamed `src/h3/` to `src/h3_utils/`
+2. ✅ Updated all imports throughout codebase (`src/run_pipeline.py`, `run_pipeline.sh`, `README.md`)
+3. ✅ Updated `pyproject.toml` to include `h3_utils` in packages list
+4. ✅ Updated documentation (`README.md`)
+5. ✅ Removed mypy exclude for h3 module (no longer needed)
+6. ✅ Updated pre-commit configuration
 
-**Impact:**
-- Developer confusion about import patterns
-- Harder to maintain and test
-- IDE autocomplete doesn't work properly
-- Inconsistent with other modules (config, walk_times, etc.)
-
-**Solution:**
-1. Rename `src/h3/` to `src/h3_utils/` or `src/hex_analysis/`
-2. Update all imports throughout codebase
-3. Update `pyproject.toml` to include in packages list
-4. Update documentation and notebooks
-5. Update CI/CD if applicable
-
-**Alternative Solution:**
-Keep namespace separate but document clearly with examples in README
-
-**Files Affected:**
-- `src/h3/relationship.py`
-- `src/h3/joins.py`
-- `src/h3/h3j.py`
-- `run_pipeline.sh` (line 155)
-- Various notebooks (6, 6b, 6c, 6d)
+**Files Modified:**
+- `src/h3_utils/` (renamed from `src/h3/`)
+- `src/run_pipeline.py` - Updated import
+- `run_pipeline.sh` - Updated import
+- `README.md` - Updated documentation
+- `pyproject.toml` - Added to packages, removed exclude
+- `.pre-commit-config.yaml` - Removed h3 exclude
 
 ---
 
@@ -155,7 +139,7 @@ Current test suite has significant gaps:
 
 **Current Coverage Gaps:**
 - `src/visualization/` - 0% coverage
-- `src/h3/` - 0% coverage
+- `src/h3_utils/` - 0% coverage
 - `src/update_data_sources.py` - 0% coverage
 - `src/validate_data.py` - 0% coverage
 - `src/convert_to_pmtiles.py` - 0% coverage
@@ -430,8 +414,8 @@ This suggests migration is ongoing but incomplete.
 H3 hexagon infrastructure was built to replace census blocks as standardized geographic units, but the original goal has not been achieved. H3 is currently only used for post-processing aggregation and visualization, while all core analysis still uses census blocks.
 
 **Current State:**
-- ✅ H3 relationship file generation exists (`src/h3/relationship.py`)
-- ✅ H3 join utilities exist (`src/h3/joins.py`)
+- ✅ H3 relationship file generation exists (`src/h3_utils/relationship.py`)
+- ✅ H3 join utilities exist (`src/h3_utils/joins.py`)
 - ✅ H3 visualization functions exist
 - ✅ H3J format conversion exists
 - ❌ Walk times calculated at census block centroids (not H3 hexagon centroids)
@@ -455,6 +439,8 @@ See FR-004 for complete implementation plan. This technical debt item tracks the
 **References:**
 - `H3_PROGRESS_ASSESSMENT.md` - Detailed assessment of H3 progress
 - Original goal: Use H3 hexagons instead of census blocks for standardized geographic detail
+- `src/h3_utils/relationship.py` - Existing H3 relationship file generation
+- `src/h3_utils/joins.py` - Existing H3 join utilities
 
 ---
 
@@ -672,8 +658,8 @@ Complete the original goal of using H3 hexagons as standardized geographic units
 
 **References:**
 - `H3_PROGRESS_ASSESSMENT.md` - Detailed assessment and implementation plan
-- `src/h3/relationship.py` - Existing H3 relationship file generation
-- `src/h3/joins.py` - Existing H3 join utilities
+- `src/h3_utils/relationship.py` - Existing H3 relationship file generation
+- `src/h3_utils/joins.py` - Existing H3 join utilities
 
 ---
 

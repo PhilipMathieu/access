@@ -231,13 +231,13 @@ generate_all_figures(
 )
 ```
 
-### H3 (`src/h3/`)
+### H3 (`src/h3_utils/`)
 
 H3 hexagon spatial indexing:
 
 ```python
-from h3.relationship import generate_h3_relationship_area
-from h3.joins import h3_join
+from h3_utils.relationship import generate_h3_relationship_area
+from h3_utils.joins import h3_join
 
 # Generate H3 relationship file
 generate_h3_relationship_area(

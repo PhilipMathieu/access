@@ -4,11 +4,12 @@ import logging
 from pathlib import Path
 
 import geopandas as gpd
-import pandas as pd
-from tqdm import tqdm
 
 # Import h3 library directly (local h3 package is not installed as top-level)
 import h3 as h3_lib
+import pandas as pd
+from tqdm import tqdm
+
 from config.defaults import (
     DEFAULT_CRS,
     DEFAULT_H3_RESOLUTION_AREA,

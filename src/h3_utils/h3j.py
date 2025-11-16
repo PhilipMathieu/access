@@ -70,7 +70,7 @@ def convert_to_h3j(
 
     # Create JSON structure
     json_dict = {
-        "metadata": {"note": "created with h3.h3j module"},
+        "metadata": {"note": "created with h3_utils.h3j module"},
         "cells": df.drop(columns="geometry", errors="ignore").to_dict("records"),
     }
 

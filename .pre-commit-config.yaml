@@ -55,9 +55,8 @@ repos:
     additional_dependencies:
     - types-requests
     args: [--config-file=pyproject.toml]
-    exclude: ^(tests/|notebooks/|data/|docs/|archived/|src/h3/)
+    exclude: ^(tests/|notebooks/|data/|docs/|archived/)
         # Only check src/ directory for type hints
-        # Exclude h3/relationship.py due to module name conflict with installed h3 library
 
   # Security checks with Bandit
 - repo: https://github.com/PyCQA/bandit
