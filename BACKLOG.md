@@ -380,14 +380,14 @@ No automated security scanning for dependencies:
 1. ✅ Added Dependabot configuration for automated dependency updates
 2. ✅ Added `pip-audit` for vulnerability scanning in dev dependencies
 3. ✅ Created security scanning GitHub Actions workflow
-4. ✅ Set up security policy (SECURITY.md)
-5. ✅ Configured weekly automated scans
+4. ✅ Configured weekly automated scans
+5. ✅ Added security documentation to CONTRIBUTING.md
 
 **Files Created/Modified:**
 - `.github/dependabot.yml` - Automated dependency update configuration
 - `.github/workflows/security.yml` - Security scanning CI/CD workflow
-- `SECURITY.md` - Security policy and vulnerability reporting guidelines
 - `pyproject.toml` - Added pip-audit and bandit to dev dependencies
+- `CONTRIBUTING.md` - Added security best practices section
 
 ---
 

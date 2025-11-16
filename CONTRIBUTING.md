@@ -272,16 +272,20 @@ All pull requests require review before merging. Reviewers will check for:
 
 ## Security
 
-Please see [SECURITY.md](SECURITY.md) for information about reporting security vulnerabilities.
+This project has automated security scanning in place:
+
+- **Dependabot**: Weekly automated dependency updates
+- **pip-audit**: Dependency vulnerability scanning (runs weekly + on push/PR)
+- **Bandit**: Security code analysis (runs weekly + on push/PR)
 
 ### Security Best Practices
 
+When contributing, please:
 - Never commit API keys, passwords, or credentials
 - Use `.env` files for local secrets (excluded via `.gitignore`)
-- Run `pip-audit` before submitting PRs
+- Run `uv run pip-audit` before submitting PRs
 - Follow principle of least privilege
 - Validate all external inputs
-- Handle errors gracefully
 
 ## Continuous Integration
 
