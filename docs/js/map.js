@@ -897,7 +897,33 @@ class ToolControl {
         printButton.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            window.print();
+
+            // Get current map state
+            const center = this._map.getCenter();
+            const zoom = this._map.getZoom();
+
+            // Navigate to print page with map state in URL
+            const printUrl = new URL('print.html', window.location.href);
+            printUrl.searchParams.set('center', `${center.lng},${center.lat}`);
+            printUrl.searchParams.set('zoom', zoom.toFixed(2));
+
+            // Open print page in new window
+            window.open(printUrl.toString(), '_blank');
+        });
+        
+        // Handle map resize when print dialog opens/closes
+        window.addEventListener('beforeprint', () => {
+            // Resize map to match print container dimensions
+            setTimeout(() => {
+                this._map.resize();
+            }, 10);
+        });
+        
+        window.addEventListener('afterprint', () => {
+            // Resize map back to normal viewport
+            setTimeout(() => {
+                this._map.resize();
+            }, 10);
         });
         printButton.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -906,45 +932,8 @@ class ToolControl {
             }
         });
         
-        // Add export button
-        const exportButton = document.createElement('button');
-        exportButton.id = 'export-button';
-        exportButton.className = 'maplibregl-ctrl-icon';
-        exportButton.type = 'button';
-        exportButton.innerHTML = '<i class="fas fa-download"></i>';
-        exportButton.title = 'Export Map';
-        exportButton.setAttribute('aria-label', 'Export map');
-        exportButton.setAttribute('tabindex', '0');
-        exportButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            // Export map as image - wait for map to render
-            this._map.once('idle', () => {
-                const canvas = this._map.getCanvas();
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'map-export.png';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }
-                }, 'image/png');
-            });
-        });
-        exportButton.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                exportButton.click();
-            }
-        });
-        
-        // Add buttons to container
+        // Add button to container
         this._container.appendChild(printButton);
-        this._container.appendChild(exportButton);
         
         return this._container;
     }
@@ -1017,5 +1006,95 @@ map.on('load', () => {
         mapContainer.setAttribute('role', 'application');
         mapContainer.setAttribute('aria-label', 'Interactive map showing access to conserved lands in Maine');
     }
+});
+
+// Print metadata update function (IMP-009)
+function updatePrintMetadata(mapInstance) {
+    const mapToUse = mapInstance || map;
+
+    // Update date in footer
+    const printDateFooter = document.getElementById('print-date-footer');
+    if (printDateFooter) {
+        const now = new Date();
+        const center = mapToUse.getCenter();
+        const zoom = mapToUse.getZoom();
+        printDateFooter.textContent = `${now.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        })} | ${center.lat.toFixed(3)}°N, ${Math.abs(center.lng).toFixed(3)}°W | Zoom: ${zoom.toFixed(1)}`;
+    }
+
+    // Calculate and update scale
+    updatePrintScale(mapToUse);
+}
+
+// Calculate scale bar for print (IMP-009)
+function updatePrintScale(mapInstance) {
+    const mapToUse = mapInstance || map;
+
+    // Get map bounds and calculate meters per pixel at center
+    const y = mapToUse.getCenter().lat;
+    const metersPerPixel = 40075017 * Math.abs(Math.cos(y * Math.PI / 180)) / Math.pow(2, mapToUse.getZoom() + 8);
+
+    // Scale bar is 40mm on print (approximately 151 pixels at 96 DPI)
+    const scaleBarWidthPixels = 151;
+    const scaleBarMeters = metersPerPixel * scaleBarWidthPixels;
+
+    // Convert to appropriate unit (km or miles)
+    let scaleText;
+    let scaleRatio;
+
+    if (scaleBarMeters >= 1000) {
+        const km = scaleBarMeters / 1000;
+        // Round to nice number
+        let roundedKm;
+        if (km >= 10) {
+            roundedKm = Math.round(km / 10) * 10;
+        } else if (km >= 5) {
+            roundedKm = 5;
+        } else if (km >= 2) {
+            roundedKm = 2;
+        } else {
+            roundedKm = 1;
+        }
+        scaleText = `0 — ${roundedKm} km`;
+        scaleRatio = `1:${Math.round(roundedKm * 1000 / 0.04).toLocaleString()}`; // 40mm in meters
+    } else {
+        // Use meters
+        let roundedM;
+        if (scaleBarMeters >= 500) {
+            roundedM = 500;
+        } else if (scaleBarMeters >= 200) {
+            roundedM = 200;
+        } else if (scaleBarMeters >= 100) {
+            roundedM = 100;
+        } else {
+            roundedM = 50;
+        }
+        scaleText = `0 — ${roundedM} m`;
+        scaleRatio = `1:${Math.round(roundedM / 0.04).toLocaleString()}`;
+    }
+
+    // Update scale labels
+    const printScaleLabel = document.getElementById('print-scale-label');
+    if (printScaleLabel) {
+        printScaleLabel.textContent = `Scale: ${scaleRatio}`;
+    }
+
+    const printScaleDistance = document.getElementById('print-scale-distance');
+    if (printScaleDistance) {
+        printScaleDistance.textContent = scaleText;
+    }
+}
+
+// Update scale when map moves
+map.on('moveend', () => {
+    updatePrintScale(map);
+});
+
+// Initialize print metadata on load
+map.on('load', () => {
+    updatePrintMetadata(map);
 });
 

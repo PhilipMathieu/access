@@ -22,4 +22,3 @@ data/**/*.cpg filter=lfs diff=lfs merge=lfs -text
 
 # Track graph files
 data/**/*.graphml filter=lfs diff=lfs merge=lfs -text
-

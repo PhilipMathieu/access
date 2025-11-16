@@ -36,6 +36,36 @@
     <!-- Map-->
     <div class="map">
         <div id="map"></div>
+        <!-- Print-only elements (IMP-009) -->
+        <div class="print-title" style="display: none;">
+            <h1>Access to Conservation Land in Maine</h1>
+            <p class="subtitle">Walk Time Analysis by Census Block</p>
+        </div>
+        <div class="print-metadata" style="display: none;">
+            <div class="metadata-row">
+                <span class="metadata-label">Date:</span>
+                <span class="metadata-value" id="print-date"></span>
+            </div>
+            <div class="metadata-row">
+                <span class="metadata-label">Map Center:</span>
+                <span class="metadata-value" id="print-center"></span>
+            </div>
+            <div class="metadata-row">
+                <span class="metadata-label">Zoom Level:</span>
+                <span class="metadata-value" id="print-zoom"></span>
+            </div>
+        </div>
+        <div class="print-scale" style="display: none;">
+            <div class="scale-label" id="print-scale-label">Scale: 1:100,000</div>
+            <div class="scale-bar"></div>
+            <div class="scale-label" id="print-scale-distance">0 — 5 km</div>
+        </div>
+        <div class="print-north" style="display: none;"></div>
+        <div class="print-attribution" style="display: none;">
+            <div class="attribution-left" id="print-date-footer"></div>
+            <div class="attribution-center">Data: OpenStreetMap, US Census, Maine GeoLibrary, CEJST</div>
+            <div class="attribution-right">© 2025 Philip Mathieu</div>
+        </div>
     </div>
     <!-- Introduction-->
     <section class="content-section bg-primary text-white" id="introduction">

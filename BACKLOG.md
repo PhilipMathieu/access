@@ -4,6 +4,9 @@
 **Project:** Access - Spatial Accessibility Analysis for Conservation Lands
 
 **Recent Completions:**
+- ✅ TD-009: Dependency Security Scanning (2025-11-15)
+- ✅ IMP-005: Code Quality Tooling (2025-11-15)
+- ✅ IMP-009: Enhanced Print Layouts (2025-11-15)
 - ✅ IMP-006: Webmap Enhancements (2025-11-09)
 - ✅ FR-003: Mobile-Friendly Webmap (2025-11-09)
 - 🔄 TD-007: Error Handling Strategy - Partial (2025-11-15)
@@ -27,44 +30,44 @@ This document consolidates technical debt, feature requests, and improvements id
 ## 🔧 Technical Debt
 
 ### TD-001: Python 3.10 Version Lock
-**Priority:** High  
-**Effort:** Medium (16-24 hours)  
+**Priority:** High
+**Effort:** Medium (16-24 hours)
 **Category:** Dependencies
 
-**Description:**  
+**Description:**
 The project is currently locked to Python 3.10 (`requires-python = ">=3.10,<3.11"`). This restriction prevents:
 - Using Python 3.11+ performance improvements (20-25% faster)
 - Access to newer language features (PEP 657 error locations, exception groups)
 - Security updates and bug fixes in newer Python versions
 
-**Impact:**  
+**Impact:**
 - Missing significant performance gains for CPU-intensive walk time calculations
 - Inability to leverage newer Python ecosystem features
 - Potential security vulnerabilities as Python 3.10 approaches end-of-life (October 2026)
 
-**Solution:**  
+**Solution:**
 1. Test compatibility with Python 3.11 and 3.12
 2. Update dependencies that may have version conflicts
 3. Update CI/CD pipelines if applicable
 4. Update documentation and `.python-version` file
 5. Update `pyproject.toml` to support newer Python versions
 
-**Dependencies:**  
+**Dependencies:**
 - All package dependencies must support Python 3.11+
 - OSMnx 1.3.0 supports Python 3.11+
 
-**References:**  
+**References:**
 - [Python 3.11 Performance Improvements](https://docs.python.org/3.11/whatsnew/3.11.html#faster-cpython)
 - [Python Release Schedule](https://peps.python.org/pep-0664/)
 
 ---
 
 ### TD-002: Outdated OSMnx Version
-**Priority:** Medium  
-**Effort:** Medium (12-16 hours)  
+**Priority:** Medium
+**Effort:** Medium (12-16 hours)
 **Category:** Dependencies
 
-**Description:**  
+**Description:**
 Project uses OSMnx 1.3.0 (pinned), but latest stable version is 2.0+ (as of 2025). Newer versions include:
 - Performance optimizations for large graphs
 - Better error handling and logging
@@ -72,78 +75,62 @@ Project uses OSMnx 1.3.0 (pinned), but latest stable version is 2.0+ (as of 2025
 - Enhanced coordinate system handling
 - Better integration with modern GeoDataFrames
 
-**Impact:**  
+**Impact:**
 - Missing performance improvements for graph operations
 - Potential compatibility issues with newer geopandas/networkx versions
 - Missing bug fixes and security updates
 
-**Solution:**  
+**Solution:**
 1. Review OSMnx changelog for breaking changes
 2. Test upgrade with sample datasets
 3. Update `find_centroids.py` and `download_graphs.py` for API changes
 4. Update notebooks that directly use OSMnx
 5. Verify graph compatibility with existing cached `.graphml` files
 
-**Risks:**  
+**Risks:**
 - API changes may require code modifications
 - Cached graph files may need regeneration
 - Walk time calculations may produce slightly different results
 
-**References:**  
+**References:**
 - [OSMnx GitHub Releases](https://github.com/gboeing/osmnx/releases)
 - [OSMnx Migration Guide](https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md)
 
 ---
 
 ### TD-003: Mixed Import Patterns for H3 Module
-**Priority:** Medium  
-**Effort:** Small (4-8 hours)  
+**Priority:** Medium
+**Effort:** Small (4-8 hours)
+**Status:** ✅ **COMPLETED** (2025-01-XX)
 **Category:** Code Quality
 
-**Description:**  
-The `src/h3/` module uses an inconsistent import pattern due to naming conflict with the installed `h3` library:
-- Comment in `pyproject.toml`: "Import h3 modules using: from src.h3.relationship import ..."
-- Not installed as a top-level package
-- May cause confusion and import errors
+**Description:**
+The `src/h3/` module used an inconsistent import pattern due to naming conflict with the installed `h3` library. This has been resolved by renaming the module to `src/h3_utils/`.
 
-**Current State:**
-```python
-# pyproject.toml line 40-41
-# Note: src/h3 is not installed as a top-level package to avoid conflict 
-# with the installed h3 library
-```
+**Completed Implementation:**
+1. ✅ Renamed `src/h3/` to `src/h3_utils/`
+2. ✅ Updated all imports throughout codebase (`src/run_pipeline.py`, `run_pipeline.sh`, `README.md`)
+3. ✅ Updated `pyproject.toml` to include `h3_utils` in packages list
+4. ✅ Updated documentation (`README.md`)
+5. ✅ Removed mypy exclude for h3 module (no longer needed)
+6. ✅ Updated pre-commit configuration
 
-**Impact:**  
-- Developer confusion about import patterns
-- Harder to maintain and test
-- IDE autocomplete doesn't work properly
-- Inconsistent with other modules (config, walk_times, etc.)
-
-**Solution:**  
-1. Rename `src/h3/` to `src/h3_utils/` or `src/hex_analysis/`
-2. Update all imports throughout codebase
-3. Update `pyproject.toml` to include in packages list
-4. Update documentation and notebooks
-5. Update CI/CD if applicable
-
-**Alternative Solution:**  
-Keep namespace separate but document clearly with examples in README
-
-**Files Affected:**
-- `src/h3/relationship.py`
-- `src/h3/joins.py`
-- `src/h3/h3j.py`
-- `run_pipeline.sh` (line 155)
-- Various notebooks (6, 6b, 6c, 6d)
+**Files Modified:**
+- `src/h3_utils/` (renamed from `src/h3/`)
+- `src/run_pipeline.py` - Updated import
+- `run_pipeline.sh` - Updated import
+- `README.md` - Updated documentation
+- `pyproject.toml` - Added to packages, removed exclude
+- `.pre-commit-config.yaml` - Removed h3 exclude
 
 ---
 
 ### TD-004: Incomplete Test Coverage
-**Priority:** High  
-**Effort:** Large (40-60 hours)  
+**Priority:** High
+**Effort:** Large (40-60 hours)
 **Category:** Testing
 
-**Description:**  
+**Description:**
 Current test suite has significant gaps:
 - Only 4 test files exist (`test_walk_times.py`, `test_merging.py`, `test_config.py`, `test_analysis.py`)
 - No tests for visualization module
@@ -155,7 +142,7 @@ Current test suite has significant gaps:
 
 **Current Coverage Gaps:**
 - `src/visualization/` - 0% coverage
-- `src/h3/` - 0% coverage  
+- `src/h3_utils/` - 0% coverage
 - `src/update_data_sources.py` - 0% coverage
 - `src/validate_data.py` - 0% coverage
 - `src/convert_to_pmtiles.py` - 0% coverage
@@ -163,13 +150,13 @@ Current test suite has significant gaps:
 - `src/probe_data_sources.py` - 0% coverage
 - Integration/end-to-end tests - 0% coverage
 
-**Impact:**  
+**Impact:**
 - High risk of regressions when making changes
 - Difficult to refactor with confidence
 - Hard to validate bug fixes
 - No automated quality gates for CI/CD
 
-**Solution:**  
+**Solution:**
 1. Add tests for visualization module (figures.py)
 2. Add tests for H3 module (relationship.py, joins.py, h3j.py)
 3. Add tests for data management scripts
@@ -187,11 +174,11 @@ Current test suite has significant gaps:
 ---
 
 ### TD-005: Hard-coded File Paths and Magic Strings
-**Priority:** Medium  
-**Effort:** Medium (16-24 hours)  
+**Priority:** Medium
+**Effort:** Medium (16-24 hours)
 **Category:** Code Quality
 
-**Description:**  
+**Description:**
 Many scripts contain hard-coded paths and magic strings that make them brittle and hard to maintain:
 - File paths like `data/graphs/maine_walk.graphml` repeated across multiple files
 - Maine-specific logic (should use `RegionConfig`)
@@ -205,13 +192,13 @@ graph_path='data/graphs/maine_walk.graphml'
 conserved_lands_path='data/conserved_lands/Maine_Conserved_Lands_with_nodes.shp.zip'
 ```
 
-**Impact:**  
+**Impact:**
 - Difficult to extend to other states
 - Error-prone when paths change
 - Hard to test with different configurations
 - Code duplication
 
-**Solution:**  
+**Solution:**
 1. Extend `RegionConfig` to include all data paths
 2. Create configuration module for column name constants
 3. Remove hard-coded "Maine" references
@@ -227,11 +214,11 @@ conserved_lands_path='data/conserved_lands/Maine_Conserved_Lands_with_nodes.shp.
 ---
 
 ### TD-006: Shapefile Format Dependency
-**Priority:** Medium  
-**Effort:** Large (30-40 hours)  
+**Priority:** Medium
+**Effort:** Large (30-40 hours)
 **Category:** Data Format / Technical Architecture
 
-**Description:**  
+**Description:**
 Project heavily relies on shapefile format (`.shp`, `.shp.zip`) which is:
 - Legacy format with known limitations (10-char field names, 2GB file size limit)
 - Slower to read/write compared to modern formats
@@ -249,13 +236,13 @@ Modern alternatives exist:
 - ❌ All processing still uses shapefiles
 - ✅ PMTiles conversion works from shapefiles
 
-**Impact:**  
+**Impact:**
 - Slower I/O performance for large datasets
 - Field name truncation issues
 - Multiple files to manage per dataset
 - Not cloud-optimized
 
-**Solution:**  
+**Solution:**
 1. Complete GeoParquet migration utility
 2. Add support for reading GeoParquet in all processing functions
 3. Update pipeline to use GeoParquet internally
@@ -327,11 +314,11 @@ Inconsistent error handling and logging across the codebase:
 ---
 
 ### TD-008: Incomplete CI/CD Pipeline
-**Priority:** Medium  
-**Effort:** Medium (16-24 hours)  
+**Priority:** Medium
+**Effort:** Medium (16-24 hours)
 **Category:** DevOps / Automation
 
-**Description:**  
+**Description:**
 Partial CI/CD pipeline exists but lacks critical automation:
 - GitHub Actions workflow exists for webmap deployment (`.github/workflows/static.yml`)
 - Tests must be run manually (no automated test execution)
@@ -345,13 +332,13 @@ Partial CI/CD pipeline exists but lacks critical automation:
 - ❌ No code quality checks in CI
 - ❌ No pre-commit hooks configured
 
-**Impact:**  
+**Impact:**
 - Higher risk of breaking changes
 - Manual testing burden
 - Inconsistent code quality
 - Slower development cycle
 
-**Solution:**  
+**Solution:**
 1. Extend existing GitHub Actions workflow to include:
    - Running tests on PR/push (pytest)
    - Code quality checks (linting, type checking)
@@ -373,66 +360,73 @@ Partial CI/CD pipeline exists but lacks critical automation:
 ---
 
 ### TD-009: No Dependency Security Scanning
-**Priority:** Medium  
-**Effort:** Small (4-8 hours)  
+**Priority:** Medium
+**Effort:** Small (4-8 hours)
+**Status:** ✅ **COMPLETED** (2025-11-15)
 **Category:** Security
 
-**Description:**  
+**Description:**
 No automated security scanning for dependencies:
 - Old dependency versions may have vulnerabilities
 - No alerts for security updates
 - Manual tracking of CVEs
 
-**Solution:**  
-1. Add Dependabot or Renovate for automated dependency updates
-2. Add `safety` or `pip-audit` for vulnerability scanning
-3. Add to CI/CD pipeline
-4. Set up security policy (SECURITY.md)
-5. Regular dependency update schedule
+**Completed Implementation:**
+1. ✅ Added Dependabot configuration for automated dependency updates
+2. ✅ Added `pip-audit` for vulnerability scanning in dev dependencies
+3. ✅ Created security scanning GitHub Actions workflow
+4. ✅ Configured weekly automated scans
+5. ✅ Added security documentation to CONTRIBUTING.md
+
+**Files Created/Modified:**
+- `.github/dependabot.yml` - Automated dependency update configuration
+- `.github/workflows/security.yml` - Security scanning CI/CD workflow
+- `pyproject.toml` - Added pip-audit and bandit to dev dependencies
+- `CONTRIBUTING.md` - Added security best practices section
 
 ---
 
 ### TD-010: Notebook Code Duplication
-**Priority:** Low  
-**Effort:** Large (30-40 hours)  
+**Priority:** Low
+**Effort:** Large (30-40 hours)
 **Category:** Code Quality
 
-**Description:**  
+**Description:**
 Jupyter notebooks contain duplicated logic that should be in modules:
 - Walk time calculation code duplicated between notebooks
 - Visualization code not fully migrated to `visualization/` module
 - Data loading patterns repeated
 - Analysis patterns repeated
 
-**Impact:**  
+**Impact:**
 - Harder to maintain and update
 - Inconsistent results across notebooks
 - Code drift between notebook and module implementations
 
-**Solution:**  
+**Solution:**
 1. Audit notebooks for duplicated code
 2. Extract common patterns to modules
 3. Update notebooks to use module functions
 4. Add notebook testing (nbconvert + papermill)
 5. Document notebook → module workflow
 
-**Note:**  
+**Note:**
 README mentions: "Core data processing logic has been migrated to standalone Python modules in `src/` for better maintainability"
 This suggests migration is ongoing but incomplete.
 
 ---
 
 ### TD-011: H3 Not Used as Primary Geographic Unit
-**Priority:** Medium  
-**Effort:** Large (72-104 hours)  
+**Priority:** Medium
+**Effort:** Large (72-104 hours)
 **Category:** Architecture / Analysis Methodology
 
-**Description:**  
+**Description:**
 H3 hexagon infrastructure was built to replace census blocks as standardized geographic units, but the original goal has not been achieved. H3 is currently only used for post-processing aggregation and visualization, while all core analysis still uses census blocks.
 
 **Current State:**
-- ✅ H3 relationship file generation exists (`src/h3/relationship.py`)
-- ✅ H3 join utilities exist (`src/h3/joins.py`)
+- ✅ H3 relationship file generation exists (`src/h3_utils/relationship.py`)
+- ✅ H3 join utilities exist (`src/h3_utils/joins.py`)
 - ✅ H3 visualization functions exist
 - ✅ H3J format conversion exists
 - ❌ Walk times calculated at census block centroids (not H3 hexagon centroids)
@@ -440,33 +434,35 @@ H3 hexagon infrastructure was built to replace census blocks as standardized geo
 - ❌ Statistical analysis uses census blocks (not H3 hexagons)
 - ❌ No H3-centroid mapping to OSMnx nodes
 
-**Impact:**  
+**Impact:**
 - Still subject to uneven census block granularity (urban vs. rural)
 - Blocks don't represent meaningful geographic areas
 - Blocks can be very small (parks, parking lots) or very large (rural areas)
 - H3 benefits (standardized sizes, better comparisons) not realized
 - Post-processing aggregation loses precision and accuracy
 
-**Root Cause:**  
+**Root Cause:**
 The original intent was to use H3 hexagons as standardized geographic units instead of census blocks, which have uneven granularity. However, the implementation stopped at building infrastructure for aggregation rather than making H3 the primary analysis unit.
 
-**Solution:**  
+**Solution:**
 See FR-004 for complete implementation plan. This technical debt item tracks the gap between original intent and current state.
 
 **References:**
 - `H3_PROGRESS_ASSESSMENT.md` - Detailed assessment of H3 progress
 - Original goal: Use H3 hexagons instead of census blocks for standardized geographic detail
+- `src/h3_utils/relationship.py` - Existing H3 relationship file generation
+- `src/h3_utils/joins.py` - Existing H3 join utilities
 
 ---
 
 ## 🚀 Feature Requests
 
 ### FR-001: Multi-State Support Expansion
-**Priority:** High  
-**Effort:** Large (60-80 hours)  
+**Priority:** High
+**Effort:** Large (60-80 hours)
 **Category:** Geographic Expansion
 
-**Description:**  
+**Description:**
 Extend analysis from Maine to all New England states (NH, VT, MA, RI, CT).
 
 **Current State:**
@@ -516,11 +512,11 @@ Extend analysis from Maine to all New England states (NH, VT, MA, RI, CT).
 ---
 
 ### FR-002: Interactive Dashboard for Analysis Results
-**Priority:** Medium  
-**Effort:** Large (50-70 hours)  
+**Priority:** Medium
+**Effort:** Large (50-70 hours)
 **Category:** Visualization / UI
 
-**Description:**  
+**Description:**
 Create an interactive dashboard (Dash/Streamlit/Panel) for exploring analysis results without running notebooks.
 
 **Features:**
@@ -565,12 +561,12 @@ Create an interactive dashboard (Dash/Streamlit/Panel) for exploring analysis re
 ---
 
 ### FR-003: Mobile-Friendly Webmap
-**Priority:** Medium  
-**Effort:** Medium (20-30 hours)  
-**Status:** ✅ **COMPLETED** (2025-11-09)  
+**Priority:** Medium
+**Effort:** Medium (20-30 hours)
+**Status:** ✅ **COMPLETED** (2025-11-09)
 **Category:** Webmap / UI
 
-**Description:**  
+**Description:**
 Current webmap may not be fully optimized for mobile devices.
 
 **Completed Requirements:**
@@ -612,11 +608,11 @@ Current webmap may not be fully optimized for mobile devices.
 ---
 
 ### FR-004: Complete H3 Implementation as Primary Geographic Unit
-**Priority:** Medium  
-**Effort:** Large (72-104 hours)  
+**Priority:** Medium
+**Effort:** Large (72-104 hours)
 **Category:** Analysis Methodology / Architecture
 
-**Description:**  
+**Description:**
 Complete the original goal of using H3 hexagons as standardized geographic units instead of census blocks. Currently, H3 infrastructure exists but is only used for post-processing aggregation. This feature request would make H3 the primary analysis unit throughout the pipeline.
 
 **Current State:**
@@ -673,19 +669,19 @@ Complete the original goal of using H3 hexagons as standardized geographic units
 
 **References:**
 - `H3_PROGRESS_ASSESSMENT.md` - Detailed assessment and implementation plan
-- `src/h3/relationship.py` - Existing H3 relationship file generation
-- `src/h3/joins.py` - Existing H3 join utilities
+- `src/h3_utils/relationship.py` - Existing H3 relationship file generation
+- `src/h3_utils/joins.py` - Existing H3 join utilities
 
 ---
 
 ## 🔨 Improvements
 
 ### IMP-001: Performance Optimization for Walk Time Calculations
-**Priority:** High  
-**Effort:** Large (40-60 hours)  
+**Priority:** High
+**Effort:** Large (40-60 hours)
 **Category:** Performance
 
-**Description:**  
+**Description:**
 Walk time calculations are the most computationally intensive part of the pipeline. Several optimization opportunities exist.
 
 **Current State:**
@@ -740,11 +736,11 @@ Walk time calculations are the most computationally intensive part of the pipeli
 ---
 
 ### IMP-002: Enhanced Data Validation
-**Priority:** High  
-**Effort:** Medium (24-32 hours)  
+**Priority:** High
+**Effort:** Medium (24-32 hours)
 **Category:** Data Quality
 
-**Description:**  
+**Description:**
 Strengthen data validation throughout the pipeline.
 
 **Current State:**
@@ -944,57 +940,67 @@ Enhance logging for better debugging and monitoring.
 ---
 
 ### IMP-005: Code Quality Tooling
-**Priority:** Medium  
-**Effort:** Small (8-16 hours)  
+**Priority:** Medium
+**Effort:** Small (8-16 hours)
+**Status:** ✅ **COMPLETED** (2025-11-15)
 **Category:** Development Tools
 
-**Description:**  
+**Description:**
 Set up code quality tools for consistent style and best practices.
 
-**Tools to Add:**
+**Completed Implementation:**
 
 1. **Formatting:**
-   - **Black**: Opinionated code formatter
-   - **isort**: Import sorting
-   - **Prettier**: Markdown, JSON, YAML
+   - ✅ **Black**: Opinionated code formatter (line length: 100)
+   - ✅ **isort**: Import sorting (Black profile)
+   - ✅ **nbQA**: Notebook formatting integration
 
 2. **Linting:**
-   - **Ruff**: Fast modern linter (replaces flake8, pylint)
-   - **mypy**: Static type checking
-   - **bandit**: Security linting
+   - ✅ **Ruff**: Fast modern linter with multiple rule sets
+   - ✅ **mypy**: Static type checking
+   - ✅ **bandit**: Security linting
 
 3. **Pre-commit Hooks:**
-   - Automatic formatting
-   - Linting checks
-   - Type checking
-   - Test running (optional)
+   - ✅ Automatic formatting (Black, isort)
+   - ✅ Linting checks (Ruff)
+   - ✅ Type checking (mypy)
+   - ✅ Security scanning (Bandit)
+   - ✅ File checks (trailing whitespace, EOF, YAML/JSON validation)
+   - ✅ Notebook formatting (nbQA integration)
 
 4. **IDE Configuration:**
-   - VS Code settings
-   - PyCharm settings
-   - Jupyter Lab extensions
+   - ✅ `.editorconfig` for cross-IDE consistency
 
-**Configuration Files:**
-- `.pre-commit-config.yaml`
-- `pyproject.toml` (tool configurations)
-- `.editorconfig`
+**Configuration Files Created:**
+- ✅ `.pre-commit-config.yaml` - Pre-commit hooks configuration
+- ✅ `pyproject.toml` - All tool configurations (Black, isort, Ruff, mypy, Bandit, coverage)
+- ✅ `.editorconfig` - Editor configuration for multiple file types
+- ✅ `.github/workflows/code-quality.yml` - CI/CD workflow for code quality checks
+- ✅ `CONTRIBUTING.md` - Developer guidelines and tool usage documentation
 
-**Implementation:**
-1. Add tools to dev dependencies
-2. Create configuration files
-3. Set up pre-commit hooks
-4. Document in CONTRIBUTING.md
-5. Initial code reformatting
+**Tools Added to Dev Dependencies:**
+- ✅ black>=24.0.0
+- ✅ isort>=5.13.0
+- ✅ ruff>=0.6.0
+- ✅ mypy>=1.11.0
+- ✅ pre-commit>=3.8.0
+
+**CI/CD Integration:**
+- ✅ Automated formatting checks on push/PR
+- ✅ Linting with Ruff
+- ✅ Type checking with mypy
+- ✅ Test execution with coverage
+- ✅ Pre-commit hook validation
 
 ---
 
 ### IMP-006: Webmap Enhancements
-**Priority:** Medium  
-**Effort:** Large (30-40 hours)  
-**Status:** ✅ **COMPLETED** (2025-11-09)  
+**Priority:** Medium
+**Effort:** Large (30-40 hours)
+**Status:** ✅ **COMPLETED** (2025-11-09)
 **Category:** Webmap / Visualization
 
-**Description:**  
+**Description:**
 Enhance the interactive webmap with additional features and improvements.
 
 **Completed Features:**
@@ -1050,11 +1056,11 @@ Enhance the interactive webmap with additional features and improvements.
 ---
 
 ### IMP-007: Dependency Management Improvements
-**Priority:** Low  
-**Effort:** Medium (12-16 hours)  
+**Priority:** Low
+**Effort:** Medium (12-16 hours)
 **Category:** Dependencies
 
-**Description:**  
+**Description:**
 Improve dependency management and update strategy.
 
 **Current Issues:**
@@ -1096,91 +1102,97 @@ Improve dependency management and update strategy.
 ---
 
 ### IMP-008: Census Data Caching
-**Priority:** Low  
-**Effort:** Medium (12-20 hours)  
+**Priority:** Low
+**Effort:** Medium (12-20 hours)
 **Category:** Performance / Data Management
 
 ---
 
 ### IMP-009: Enhanced Print Layouts
-**Priority:** Medium  
-**Effort:** Medium (12-16 hours)  
+**Priority:** Medium
+**Effort:** Medium (12-16 hours)
+**Status:** ✅ **COMPLETED** (2025-11-15)
 **Category:** Webmap / Visualization
 
-**Description:**  
+**Description:**
 Improve print layouts for the webmap to create publication-ready printed maps.
 
 **Current State:**
-- Basic print functionality exists (print button)
-- Print styles hide controls during printing
-- No optimized layout for printed maps
-- No print-specific styling or formatting
+- ✅ Enhanced print functionality with optimized layout
+- ✅ Print styles show properly formatted legend, title, metadata, scale bar, and north arrow
+- ✅ Publication-ready print layout with proper styling
+- ✅ Dynamic metadata population (date, coordinates, zoom, scale)
 
-**Enhancements:**
+**Completed Enhancements:**
 
 1. **Print Layout Options:**
-   - Portrait and landscape orientations
-   - Multiple page sizes (Letter, A4, Legal)
-   - Custom page size support
-   - Margin controls
+   - ✅ Landscape and portrait orientation support with CSS @page rules
+   - ✅ Letter page size optimized
+   - ✅ Proper margin controls (10mm landscape, 15mm portrait)
 
 2. **Map Styling for Print:**
-   - Higher resolution rendering
-   - Enhanced legend for print (larger, clearer)
-   - Print-optimized color schemes
-   - Title and metadata inclusion
-   - Scale bar and north arrow
-   - Attribution and data source information
+   - ✅ Enhanced legend for print (larger, clearer, always visible)
+   - ✅ Print-optimized styling with borders and shadows
+   - ✅ Title and metadata inclusion (map title, date, center, zoom)
+   - ✅ Scale bar with dynamic calculation
+   - ✅ North arrow indicator
+   - ✅ Attribution and data source information
 
 3. **Layout Customization:**
-   - Optional title block
-   - Optional legend placement (on map or separate page)
-   - Optional metadata panel
-   - Optional inset maps
-   - Custom header/footer
+   - ✅ Title block with map name and subtitle
+   - ✅ Legend placement (bottom-right)
+   - ✅ Metadata panel (bottom-left)
+   - ✅ Scale bar and north arrow (top-right)
 
 4. **Export Formats:**
-   - PDF export (multi-page support)
-   - High-resolution PNG export
-   - SVG export for vector graphics
-   - Print-optimized image formats
+   - ✅ PNG export functionality (already existed, maintained)
+   - ✅ Browser print to PDF support
 
-5. **User Experience:**
-   - Print preview before printing
-   - Print dialog with layout options
-   - Save print settings preferences
-   - Print templates for common use cases
+5. **Dynamic Updates:**
+   - ✅ Print metadata updates on print button click
+   - ✅ Scale calculation based on current zoom level
+   - ✅ Map center coordinates display
+   - ✅ Current date display
 
-**Implementation:**
-1. Create print-specific CSS styles
-2. Add print layout configuration UI
-3. Implement high-resolution rendering
-4. Add PDF export functionality (using jsPDF or similar)
-5. Create print templates
-6. Add print preview functionality
+**Potential Future Enhancements:**
+- Multiple page size options (A4, Legal) via print dialog
+- Custom page size configuration
+- Higher resolution rendering for print
+- Advanced PDF export with multi-page support
+- Print preview dialog before printing
+- Print templates for common use cases
+- Inset maps
+- Custom header/footer options
+
+**Implementation Summary:**
+1. ✅ Created comprehensive print-specific CSS styles with @media print
+2. ✅ Added print layout HTML elements (title, metadata, scale, north arrow, attribution)
+3. ✅ Implemented dynamic metadata population in JavaScript
+4. ✅ Added scale calculation based on map zoom and latitude
+5. ✅ Integrated print functionality with existing print button
 
 **Benefits:**
-- Publication-ready maps
-- Professional appearance
-- Flexible layout options
-- Better documentation and reporting
+- ✅ Publication-ready maps with professional appearance
+- ✅ Comprehensive map information for documentation
+- ✅ Properly scaled and oriented print output
+- ✅ Clear attribution and data sources
 
-**Files:**
-- `docs/css/styles.css` (print media queries)
-- `docs/js/map.js` (print/export functionality)
-- New: `docs/js/print.js` (print layout configuration)
+**Files Modified:**
+- `docs/css/styles.css` (enhanced print media queries at lines 13437-13716)
+- `docs/js/map.js` (print metadata functions at lines 1029-1128)
+- `docs/index.html` (print-only HTML elements at lines 40-67)
 
 **Dependencies:**
-- IMP-006 (Webmap Enhancements) - Print functionality already exists
+- IMP-006 (Webmap Enhancements) - Print functionality already existed
 
 ---
 
 ### IMP-008: Census Data Caching
-**Priority:** Low  
-**Effort:** Medium (12-20 hours)  
+**Priority:** Low
+**Effort:** Medium (12-20 hours)
 **Category:** Performance / Data Management
 
-**Description:**  
+**Description:**
 Implement caching for Census API calls to improve performance and reduce API usage.
 
 **Current State:**
@@ -1252,8 +1264,8 @@ Implement caching for Census API calls to improve performance and reduce API usa
 
 ### Quick Wins (High Priority, Small/Medium Effort)
 
-1. **TD-009:** No Dependency Security Scanning - Small effort (4-8 hours), high security impact
-2. **IMP-005:** Code Quality Tooling - Small effort (8-16 hours), ongoing benefits
+1. ✅ ~~**TD-009:** No Dependency Security Scanning~~ - COMPLETED (2025-11-15)
+2. ✅ ~~**IMP-005:** Code Quality Tooling~~ - COMPLETED (2025-11-15)
 3. **TD-007:** Error Handling Strategy - Medium effort (20-30 hours), critical for reliability
 4. **TD-003:** Mixed Import Patterns for H3 Module - Small effort (4-8 hours), improves developer experience
 
@@ -1286,8 +1298,8 @@ Implement caching for Census API calls to improve performance and reduce API usa
 **Focus: Code Quality, Testing, Security**
 
 **Quick Wins:**
-1. TD-009: Dependency Security Scanning (Small, 4-8 hours)
-2. IMP-005: Code Quality Tooling (Small, 8-16 hours)
+1. ✅ ~~TD-009: Dependency Security Scanning~~ - COMPLETED (2025-11-15)
+2. ✅ ~~IMP-005: Code Quality Tooling~~ - COMPLETED (2025-11-15)
 3. TD-003: H3 Module Import Pattern (Small, 4-8 hours)
 
 **Core Infrastructure:**
@@ -1295,7 +1307,8 @@ Implement caching for Census API calls to improve performance and reduce API usa
 5. TD-007: Error Handling Strategy (Medium, 20-30 hours)
 6. TD-004: Test Coverage - Priority Areas (Large, 40-60 hours) - Focus on critical path first
 
-**Total Phase 1 Effort:** ~100-150 hours (2.5-4 weeks full-time)
+**Total Phase 1 Effort:** ~88-134 hours remaining (2-3.5 weeks full-time)
+**Completed:** ~12-16 hours (TD-009 + IMP-005)
 
 ---
 
@@ -1359,7 +1372,7 @@ Implement caching for Census API calls to improve performance and reduce API usa
 ### Summary by Priority
 
 **Must Have (High Priority):**
-- Phase 1: TD-009, IMP-005, TD-007, TD-004, TD-008
+- Phase 1: ✅ TD-009 (COMPLETED), ✅ IMP-005 (COMPLETED), TD-007, TD-004, TD-008
 - Phase 2: TD-001, IMP-001, IMP-002
 - Phase 3: TD-005 (prerequisite for FR-001)
 - Phase 4: FR-001
@@ -1462,7 +1475,7 @@ This backlog should be reviewed and updated:
 - **Quarterly:** Roadmap revision, effort calibration
 - **Annually:** Strategic direction, major initiatives
 
-**Last Review:** 2025-11-09  
+**Last Review:** 2025-11-09
 **Next Review:** 2025-12-09
 
 ---
@@ -1519,4 +1532,3 @@ For questions or to contribute:
 - Verified TD-006: GeoParquet migration file exists
 - Updated status indicators (✅/❌/⚠️) throughout for clarity
 - Clarified current state of various tools and scripts
-

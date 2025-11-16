@@ -1,0 +1,55 @@
+name: Deploy to GitHub Pages
+
+on:
+  # Deploy main branch to production
+  push:
+    branches: ["main"]
+
+  # Deploy PR previews
+  pull_request:
+    branches: ["main"]
+    types: [opened, synchronize, reopened, closed]
+
+  # Allow manual deployment
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Skip on PR close events (handled by cleanup job)
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to GitHub Pages
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./docs
+          preview-branch: gh-pages
+          umbrella-dir: pr-previews
+          action: auto
+
+  cleanup:
+    # Only run when PR is closed
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Remove PR Preview
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: ./docs
+          preview-branch: gh-pages
+          umbrella-dir: pr-previews
+          action: remove

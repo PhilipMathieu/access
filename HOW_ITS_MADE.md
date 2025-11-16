@@ -1,6 +1,6 @@
 # How It's Made: The Access Project Pipeline
 
-> **For Graduate Students and Researchers**  
+> **For Graduate Students and Researchers**
 > This document provides a detailed technical deep-dive into the Access project pipeline, from data acquisition through analysis. It's designed to help other researchers understand the methodology, learn from design decisions, and potentially adapt this approach for their own work.
 
 ## Table of Contents
@@ -119,7 +119,7 @@ Raw Data Sources
 3. Query nearest node for each centroid
 4. Handle edge cases (centroids outside network, islands)
 
-**Output**: 
+**Output**:
 - `data/blocks/tl_2020_23_tabblock20_with_nodes.shp.zip`
 - `data/conserved_lands/Maine_Conserved_Lands_with_nodes.shp.zip`
 
@@ -152,11 +152,11 @@ For each block centroid node, finds all conserved land nodes reachable within sp
 # Pseudocode
 for each block_centroid_node:
     distances = bounded_dijkstra(
-        graph, 
+        graph,
         source=block_centroid_node,
         max_distance=max_trip_time
     )
-    
+
     for each conserved_land_node:
         if conserved_land_node in distances:
             trip_time = smallest_threshold_that_fits(distances[conserved_land_node])
@@ -169,7 +169,7 @@ for each block_centroid_node:
    - Reduces computation from O(V log V) to O(E_subgraph)
    - Critical for large graphs (Maine has ~500K nodes)
 
-2. **Rustworkx Integration**: 
+2. **Rustworkx Integration**:
    - Rust-based graph library (10-100x faster than NetworkX)
    - Used for shortest path calculations
    - NetworkX retained for graph construction (better OSMnx integration)
@@ -284,7 +284,7 @@ blocks[f"AC_{time}"] = blocks.groupby("GEOID20")["trip_time"].apply(
 **Algorithm**:
 
 1. **Load Relationship File**: Maps 2010 blocks → 2020 blocks with intersection areas
-2. **Calculate Weights**: 
+2. **Calculate Weights**:
    ```
    weight = intersection_area / 2020_block_area
    ```
@@ -423,20 +423,20 @@ to conserved land within a 10-minute walk.
 def bounded_dijkstra(graph, source, max_distance):
     distances = {source: 0}
     queue = [(0, source)]
-    
+
     while queue:
         current_dist, current = heapq.heappop(queue)
-        
+
         if current_dist > max_distance:
             break  # Bounded: stop exploring beyond threshold
-        
+
         for neighbor, edge_weight in graph.neighbors(current):
             new_dist = current_dist + edge_weight
-            
+
             if new_dist <= max_distance and new_dist < distances.get(neighbor, inf):
                 distances[neighbor] = new_dist
                 heapq.heappush(queue, (new_dist, neighbor))
-    
+
     return distances
 ```
 
@@ -661,4 +661,3 @@ For questions about the pipeline or to contribute improvements:
 - **Contact**: Philip Mathieu (mathieu.p@northeastern.edu)
 - **Issues**: GitHub Issues
 - **Documentation**: See README.md for usage, DATA_DICTIONARY.md for data details
-
