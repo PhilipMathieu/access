@@ -5,7 +5,7 @@ This script re-runs processing steps like finding centroids and adding OSMnx nod
 """
 
 import logging
-import subprocess
+import subprocess  # nosec B404 - subprocess is used safely with list arguments, not shell=True
 import sys
 from pathlib import Path
 
@@ -67,7 +67,7 @@ def process_shapefile_with_centroids(
             output_suffix,
         ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path.cwd())
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=Path.cwd())  # nosec B603
 
         if result.returncode == 0:
             logging.info(f"Successfully processed {shapefile}")

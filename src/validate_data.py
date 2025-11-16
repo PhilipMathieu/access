@@ -123,9 +123,7 @@ def compare_schemas(old_schema: dict, new_schema: dict) -> dict[str, Any]:
         old_type = old_dtypes.get(col)
         new_type = new_dtypes.get(col)
         if old_type and new_type and old_type != new_type:
-            type_changes = changes["type_changes"]
-            assert isinstance(type_changes, list)
-            type_changes.append({"column": col, "old_type": old_type, "new_type": new_type})
+            changes["type_changes"].append({"column": col, "old_type": old_type, "new_type": new_type})
 
     # Check row count change
     old_count = old_schema.get("row_count", 0)
@@ -195,9 +193,7 @@ def validate_data_quality(
                 if col != "geometry":
                     missing = gdf[col].isna().sum()
                     if missing > 0:
-                        missing_values = quality_metrics["missing_values"]
-                        assert isinstance(missing_values, dict)
-                        missing_values[col] = {
+                        quality_metrics["missing_values"][col] = {
                             "count": int(missing),
                             "percent": (missing / len(gdf)) * 100,
                         }
@@ -219,9 +215,7 @@ def validate_data_quality(
                         upper_bound = q3 + 1.5 * iqr
                         outliers = ((values < lower_bound) | (values > upper_bound)).sum()
                         if outliers > 0:
-                            outliers_dict = quality_metrics["outliers"]
-                            assert isinstance(outliers_dict, dict)
-                            outliers_dict[col] = {
+                            quality_metrics["outliers"][col] = {
                                 "count": int(outliers),
                                 "percent": (outliers / len(values)) * 100,
                             }
@@ -230,9 +224,7 @@ def validate_data_quality(
             for col in df.columns:
                 missing = df[col].isna().sum()
                 if missing > 0:
-                    missing_values = quality_metrics["missing_values"]
-                    assert isinstance(missing_values, dict)
-                    missing_values[col] = {
+                    quality_metrics["missing_values"][col] = {
                         "count": int(missing),
                         "percent": (missing / len(df)) * 100,
                     }
@@ -252,9 +244,7 @@ def validate_data_quality(
                     upper_bound = q3 + 1.5 * iqr
                     outliers = ((values < lower_bound) | (values > upper_bound)).sum()
                     if outliers > 0:
-                        outliers_dict = quality_metrics["outliers"]
-                        assert isinstance(outliers_dict, dict)
-                        outliers_dict[col] = {
+                        quality_metrics["outliers"][col] = {
                             "count": int(outliers),
                             "percent": (outliers / len(values)) * 100,
                         }
@@ -317,9 +307,7 @@ def validate_data_file(file_path: Path, source_name: str | None = None) -> dict[
 
     if not current_schema:
         validation_result["valid"] = False
-        errors = validation_result["errors"]
-        assert isinstance(errors, list)
-        errors.append("Could not read schema from file")
+        validation_result["errors"].append("Could not read schema from file")
         return validation_result
 
     # Check for schema changes
@@ -338,22 +326,17 @@ def validate_data_file(file_path: Path, source_name: str | None = None) -> dict[
             validation_result["schema_changes"] = schema_changes
 
             # Check for breaking changes
-            warnings = validation_result["warnings"]
-            assert isinstance(warnings, list)
             if schema_changes["removed_columns"]:
                 removed_cols = schema_changes["removed_columns"]
-                assert isinstance(removed_cols, list)
-                warnings.append(f"Removed columns: {', '.join(removed_cols)}")
+                validation_result["warnings"].append(f"Removed columns: {', '.join(removed_cols)}")
 
             if schema_changes["type_changes"]:
                 type_changes = schema_changes["type_changes"]
-                assert isinstance(type_changes, list)
-                warnings.append(f"Type changes: {len(type_changes)} columns")
+                validation_result["warnings"].append(f"Type changes: {len(type_changes)} columns")
 
             if schema_changes["crs_change"]:
                 crs_change = schema_changes["crs_change"]
-                assert isinstance(crs_change, dict)
-                warnings.append(f"CRS changed: {crs_change['old']} -> {crs_change['new']}")
+                validation_result["warnings"].append(f"CRS changed: {crs_change['old']} -> {crs_change['new']}")
 
         # Save current schema version
         if source_name not in schema_versions:
@@ -371,13 +354,11 @@ def validate_data_file(file_path: Path, source_name: str | None = None) -> dict[
     validation_result["quality_metrics"] = quality_metrics
 
     # Check for quality issues
-    warnings = validation_result["warnings"]
-    assert isinstance(warnings, list)
     if quality_metrics["invalid_geometries"] > 0:
-        warnings.append(f"{quality_metrics['invalid_geometries']} invalid geometries")
+        validation_result["warnings"].append(f"{quality_metrics['invalid_geometries']} invalid geometries")
 
     if quality_metrics["empty_geometries"] > 0:
-        warnings.append(f"{quality_metrics['empty_geometries']} empty geometries")
+        validation_result["warnings"].append(f"{quality_metrics['empty_geometries']} empty geometries")
 
     high_missing = {
         col: metrics
