@@ -898,13 +898,32 @@ class ToolControl {
             e.preventDefault();
             e.stopPropagation();
 
-            // Populate print metadata (IMP-009)
-            updatePrintMetadata(this._map);
+            // Get current map state
+            const center = this._map.getCenter();
+            const zoom = this._map.getZoom();
 
-            // Small delay to ensure metadata is updated before print dialog
+            // Navigate to print page with map state in URL
+            const printUrl = new URL('print.html', window.location.href);
+            printUrl.searchParams.set('center', `${center.lng},${center.lat}`);
+            printUrl.searchParams.set('zoom', zoom.toFixed(2));
+
+            // Open print page in new window
+            window.open(printUrl.toString(), '_blank');
+        });
+        
+        // Handle map resize when print dialog opens/closes
+        window.addEventListener('beforeprint', () => {
+            // Resize map to match print container dimensions
             setTimeout(() => {
-                window.print();
-            }, 100);
+                this._map.resize();
+            }, 10);
+        });
+        
+        window.addEventListener('afterprint', () => {
+            // Resize map back to normal viewport
+            setTimeout(() => {
+                this._map.resize();
+            }, 10);
         });
         printButton.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -913,45 +932,8 @@ class ToolControl {
             }
         });
         
-        // Add export button
-        const exportButton = document.createElement('button');
-        exportButton.id = 'export-button';
-        exportButton.className = 'maplibregl-ctrl-icon';
-        exportButton.type = 'button';
-        exportButton.innerHTML = '<i class="fas fa-download"></i>';
-        exportButton.title = 'Export Map';
-        exportButton.setAttribute('aria-label', 'Export map');
-        exportButton.setAttribute('tabindex', '0');
-        exportButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            // Export map as image - wait for map to render
-            this._map.once('idle', () => {
-                const canvas = this._map.getCanvas();
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'map-export.png';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }
-                }, 'image/png');
-            });
-        });
-        exportButton.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                exportButton.click();
-            }
-        });
-        
-        // Add buttons to container
+        // Add button to container
         this._container.appendChild(printButton);
-        this._container.appendChild(exportButton);
         
         return this._container;
     }
