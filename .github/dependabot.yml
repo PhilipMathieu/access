@@ -1,9 +1,13 @@
 # Dependabot configuration for automated dependency updates
 # See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Note: This project uses uv for dependency management (pyproject.toml + uv.lock)
+# Dependabot uses the "pip" ecosystem which works with uv projects by reading pyproject.toml
+# CI workflows use `uv sync` to install dependencies from the lock file
 
 version: 2
 updates:
-  # Monitor Python dependencies
+  # Monitor Python dependencies (managed by uv)
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
