@@ -1,4 +1,5 @@
 import osmnx as ox
+
 ox.settings.cache_folder = "./cache/"
 ox.settings.log_console = True
 print("Using OSMnx version", ox.__version__)

@@ -2,13 +2,12 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Dict, List, Union
 
 
 @dataclass
 class RegionConfig:
     """Configuration for a state or region.
-    
+
     Attributes:
         state_fips: State FIPS code (e.g., "23" for Maine)
         state_abbrev: State abbreviation (e.g., "ME")
@@ -18,6 +17,7 @@ class RegionConfig:
         tracts_pattern: Pattern for tract shapefile names
         relationship_file_pattern: Pattern for Census relationship files
     """
+
     state_fips: str
     state_abbrev: str
     state_name: str
@@ -25,13 +25,13 @@ class RegionConfig:
     blocks_pattern: str = "tl_2020_{state_fips}_tabblock20.zip"
     tracts_pattern: str = "tl_2022_{state_fips}_tract.zip"
     relationship_file_pattern: str = "tab2010_tab2020_st{state_fips}_{state_abbrev_lower}.txt"
-    
+
     def get_blocks_path(self, with_nodes: bool = False) -> Path:
         """Get path to blocks shapefile.
-        
+
         Args:
             with_nodes: If True, append '_with_nodes' to filename
-            
+
         Returns:
             Path to blocks shapefile
         """
@@ -39,13 +39,13 @@ class RegionConfig:
         if with_nodes:
             filename = filename.replace(".zip", "_with_nodes.shp.zip")
         return self.data_root / "blocks" / filename
-    
+
     def get_tracts_path(self, with_nodes: bool = False) -> Path:
         """Get path to tracts shapefile.
-        
+
         Args:
             with_nodes: If True, append '_with_nodes' to filename
-            
+
         Returns:
             Path to tracts shapefile
         """
@@ -53,22 +53,21 @@ class RegionConfig:
         if with_nodes:
             filename = filename.replace(".zip", "_with_nodes.shp.zip")
         return self.data_root / "tracts" / filename
-    
+
     def get_relationship_file_path(self) -> Path:
         """Get path to Census relationship file.
-        
+
         Returns:
             Path to relationship file
         """
         filename = self.relationship_file_pattern.format(
-            state_fips=self.state_fips,
-            state_abbrev_lower=self.state_abbrev.lower()
+            state_fips=self.state_fips, state_abbrev_lower=self.state_abbrev.lower()
         )
         return self.data_root / filename
 
 
 # New England states configuration
-NEW_ENGLAND_STATES: Dict[str, RegionConfig] = {
+NEW_ENGLAND_STATES: dict[str, RegionConfig] = {
     "Maine": RegionConfig(
         state_fips="23",
         state_abbrev="ME",
@@ -102,45 +101,45 @@ NEW_ENGLAND_STATES: Dict[str, RegionConfig] = {
 }
 
 
-def get_region_config(state_name_or_fips: Union[str, int]) -> Optional[RegionConfig]:
+def get_region_config(state_name_or_fips: str | int) -> RegionConfig | None:
     """Get region configuration for a state.
-    
+
     Args:
         state_name_or_fips: State name (e.g., "Maine") or FIPS code (e.g., "23" or 23)
-        
+
     Returns:
         RegionConfig if found, None otherwise
     """
     # Convert to string if int
     if isinstance(state_name_or_fips, int):
         state_name_or_fips = str(state_name_or_fips).zfill(2)
-    
+
     # Try exact name match
     if state_name_or_fips in NEW_ENGLAND_STATES:
         return NEW_ENGLAND_STATES[state_name_or_fips]
-    
+
     # Try case-insensitive name match
     state_name_or_fips_lower = state_name_or_fips.lower()
     for name, config in NEW_ENGLAND_STATES.items():
         if name.lower() == state_name_or_fips_lower:
             return config
-    
+
     # Try FIPS code match
     for config in NEW_ENGLAND_STATES.values():
         if config.state_fips == state_name_or_fips:
             return config
         if config.state_abbrev.upper() == state_name_or_fips.upper():
             return config
-    
+
     return None
 
 
-def get_multi_state_config(state_list: List[Union[str, int]]) -> List[RegionConfig]:
+def get_multi_state_config(state_list: list[str | int]) -> list[RegionConfig]:
     """Get region configurations for multiple states.
-    
+
     Args:
         state_list: List of state names or FIPS codes
-        
+
     Returns:
         List of RegionConfig objects
     """
@@ -152,4 +151,3 @@ def get_multi_state_config(state_list: List[Union[str, int]]) -> List[RegionConf
         else:
             raise ValueError(f"Could not find configuration for state: {state}")
     return configs
-

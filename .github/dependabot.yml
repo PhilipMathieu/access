@@ -8,37 +8,37 @@
 version: 2
 updates:
   # Monitor Python dependencies (managed by uv)
-  - package-ecosystem: "uv"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "python"
-    commit-message:
-      prefix: "deps"
-      include: "scope"
-    reviewers:
-      - "PhilipMathieu"
+- package-ecosystem: uv
+  directory: /
+  schedule:
+    interval: weekly
+    day: monday
+    time: 09:00
+  open-pull-requests-limit: 5
+  labels:
+  - dependencies
+  - python
+  commit-message:
+    prefix: deps
+    include: scope
+  reviewers:
+  - PhilipMathieu
     # Group minor and patch updates together
-    groups:
-      minor-and-patch:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
+  groups:
+    minor-and-patch:
+      patterns:
+      - '*'
+      update-types:
+      - minor
+      - patch
 
   # Monitor GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "monthly"
-    labels:
-      - "dependencies"
-      - "github-actions"
-    commit-message:
-      prefix: "ci"
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: monthly
+  labels:
+  - dependencies
+  - github-actions
+  commit-message:
+    prefix: ci

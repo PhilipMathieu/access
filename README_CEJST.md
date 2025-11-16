@@ -47,4 +47,3 @@ python src/convert_to_pmtiles.py data/cejst-maine.shp docs/data/cejst.pmtiles -l
 - **Full US Dataset**: `data/cejst-us.zip` (compressed) and `data/cejst-us/` (extracted)
 - **Maine-Specific**: `data/cejst-maine.shp` (cropped shapefile)
 - **Webmap PMTiles**: `docs/data/cejst.pmtiles` (generated from Maine-specific data)
-

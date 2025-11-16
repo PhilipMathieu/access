@@ -96,4 +96,3 @@ def test_my_function(sample_graph):
     assert result is not None
     assert len(result) > 0
 ```
-

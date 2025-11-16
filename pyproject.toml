@@ -148,6 +148,10 @@ ignore = [
 "notebooks/**/*.py" = [
     "E402",  # module level import not at top of file
     "F401",  # imported but unused
+    "F821",  # undefined name (common in notebooks where vars defined in previous cells)
+    "F403",  # star imports (common in notebooks)
+    "F405",  # may be undefined from star imports (common in notebooks)
+    "B018",  # useless expression (common in notebooks for display purposes)
 ]
 
 # mypy configuration
@@ -164,6 +168,14 @@ warn_unused_ignores = true
 warn_no_return = true
 follow_imports = "normal"
 ignore_missing_imports = true
+exclude = [
+    "tests/",
+    "notebooks/",
+    "data/",
+    "docs/",
+    "archived/",
+    "src/h3/",  # Exclude due to module name conflict with installed h3 library
+]
 
 [[tool.mypy.overrides]]
 module = [
@@ -208,4 +220,3 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
-

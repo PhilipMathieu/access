@@ -4,14 +4,14 @@ Probe all data sources used in the Access project for availability.
 If a source is unavailable, we will update it.
 """
 
-import sys
-import requests
-import osmnx as ox
-from pathlib import Path
-from typing import Dict, Tuple, Optional
 import json
-from datetime import datetime
 import re
+import sys
+from datetime import datetime
+from pathlib import Path
+
+import osmnx as ox
+import requests
 
 # Set OSMnx cache folder
 ox.settings.cache_folder = "./cache/"
@@ -20,49 +20,50 @@ ox.settings.cache_folder = "./cache/"
 METADATA_FILE = Path("data/data_source_metadata.json")
 
 
-def load_metadata() -> Dict:
+def load_metadata() -> dict:
     """Load data source metadata from file."""
     if METADATA_FILE.exists():
         try:
-            with open(METADATA_FILE, 'r') as f:
+            with open(METADATA_FILE) as f:
                 return json.load(f)
-        except (json.JSONDecodeError, IOError):
+        except (OSError, json.JSONDecodeError):
             return {}
     return {}
 
 
-def save_metadata(metadata: Dict):
+def save_metadata(metadata: dict):
     """Save data source metadata to file."""
     METADATA_FILE.parent.mkdir(parents=True, exist_ok=True)
-    with open(METADATA_FILE, 'w') as f:
+    with open(METADATA_FILE, "w") as f:
         json.dump(metadata, f, indent=2, default=str)
 
 
-def get_version_from_url(url: str) -> Optional[str]:
+def get_version_from_url(url: str) -> str | None:
     """Extract version/year from URL if present."""
     # Look for year patterns like TIGER2020, TIGER2022, rel2020
-    year_match = re.search(r'(?:TIGER|rel)(\d{4})', url, re.IGNORECASE)
+    year_match = re.search(r"(?:TIGER|rel)(\d{4})", url, re.IGNORECASE)
     if year_match:
         return year_match.group(1)
     return None
 
 
-def get_local_file_date(local_path: Path) -> Optional[datetime]:
+def get_local_file_date(local_path: Path) -> datetime | None:
     """Get modification date of local file."""
     if local_path.exists():
         return datetime.fromtimestamp(local_path.stat().st_mtime)
     return None
 
 
-def get_remote_file_date(url: str) -> Optional[datetime]:
+def get_remote_file_date(url: str) -> datetime | None:
     """Get Last-Modified date from remote file."""
     try:
         response = requests.head(url, timeout=30, allow_redirects=True)
         if response.status_code == 200:
-            last_modified = response.headers.get('Last-Modified')
+            last_modified = response.headers.get("Last-Modified")
             if last_modified:
                 try:
                     from email.utils import parsedate_to_datetime
+
                     return parsedate_to_datetime(last_modified)
                 except (ValueError, TypeError):
                     pass
@@ -77,38 +78,38 @@ DATA_SOURCES = {
         "type": "osmnx",
         "test": "graph_from_place",
         "params": {"place": {"state": "Maine"}, "network_type": "walk"},
-        "description": "Street network data via OSMnx from OpenStreetMap"
+        "description": "Street network data via OSMnx from OpenStreetMap",
     },
     "Census TIGER/Line Blocks": {
         "type": "http",
         "url": "https://www2.census.gov/geo/tiger/TIGER2020/TABBLOCK20/tl_2020_23_tabblock20.zip",
-        "description": "Census block boundaries for Maine (FIPS code 23)"
+        "description": "Census block boundaries for Maine (FIPS code 23)",
     },
     "Census TIGER/Line Tracts": {
         "type": "http",
         "url": "https://www2.census.gov/geo/tiger/TIGER2022/TRACT/tl_2022_23_tract.zip",
-        "description": "Census tract boundaries for Maine (FIPS code 23)"
+        "description": "Census tract boundaries for Maine (FIPS code 23)",
     },
     "Census API": {
         "type": "census_api",
-        "description": "Census Bureau API for demographic data (requires API key)"
+        "description": "Census Bureau API for demographic data (requires API key)",
     },
     "Census Relationship File": {
         "type": "http",
         "url": "https://www2.census.gov/geo/docs/maps-data/data/rel2020/tabblock2010_tabblock2020_st23_me.txt",
         "alternative_urls": [
             "https://www2.census.gov/geo/docs/maps-data/data/rel2020/tabblock2010_tabblock2020_st23_me.zip",
-            "https://www2.census.gov/programs-surveys/geography/technical-documentation/records-layout/2020-census-block-record-layout.html"
+            "https://www2.census.gov/programs-surveys/geography/technical-documentation/records-layout/2020-census-block-record-layout.html",
         ],
         "local_path": "data/tab2010_tab2020_st23_me.txt",
-        "description": "Census block relationship file for Maine (2010 to 2020). May need to download manually from Census website."
+        "description": "Census block relationship file for Maine (2010 to 2020). May need to download manually from Census website.",
     },
     "Maine GeoLibrary Conserved Lands": {
         "type": "arcgis",
         "url": "https://gis.maine.gov/arcgis/rest/services/acf/Conserved_Lands/MapServer/0/query",
         "alternative_urls": [
             "https://www.maine.gov/geolib/catalog.html",
-            "https://gis.maine.gov/arcgis/rest/services/"
+            "https://gis.maine.gov/arcgis/rest/services/",
         ],
         "local_path": "data/conserved_lands",
         "params": {
@@ -116,9 +117,9 @@ DATA_SOURCES = {
             "outFields": "*",
             "f": "json",
             "returnGeometry": "true",
-            "resultRecordCount": "1"
+            "resultRecordCount": "1",
         },
-        "description": "Maine Conserved Lands dataset from Maine GeoLibrary. Service endpoint may have changed - check Maine GeoLibrary catalog."
+        "description": "Maine Conserved Lands dataset from Maine GeoLibrary. Service endpoint may have changed - check Maine GeoLibrary catalog.",
     },
     "CEJST (Climate Equity and Justice Screening Tool)": {
         "type": "http",
@@ -126,19 +127,21 @@ DATA_SOURCES = {
         "alternative_urls": [
             "https://public-environmental-data-partners.github.io/j40-cejst-2/en/downloads",
             "https://screeningtool.geoplatform.gov/api/v1/cejst/download-file/state/me",
-            "https://screeningtool.geoplatform.gov/api/v1/cejst/download-file/state/ME"
+            "https://screeningtool.geoplatform.gov/api/v1/cejst/download-file/state/ME",
         ],
         "local_path": "data/cejst-us.zip",
-        "description": "CEJST Version 2.0 shapefile covering all US census tracts from public-environmental-data-partners.github.io/j40-cejst-2"
-    }
+        "description": "CEJST Version 2.0 shapefile covering all US census tracts from public-environmental-data-partners.github.io/j40-cejst-2",
+    },
 }
 
 
-def test_osmnx_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Optional[Dict]]:
+def test_osmnx_source(
+    name: str, config: dict  # noqa: ARG001
+) -> tuple[bool, str | None, dict | None]:
     """Test OSMnx data source availability."""
     metadata = load_metadata()
     try:
-        print(f"  Testing OSMnx connection...")
+        print("  Testing OSMnx connection...")
         # Try a small test query to Portland, Maine (much smaller than full state)
         test_place = {"city": "Portland", "state": "Maine"}
         G = ox.graph_from_place(test_place, network_type="walk", simplify=True)
@@ -147,7 +150,7 @@ def test_osmnx_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Opt
             # Update metadata
             new_metadata = {
                 "last_checked": datetime.now().isoformat(),
-                "update_available": False  # OSMnx is continuously updated
+                "update_available": False,  # OSMnx is continuously updated
             }
             metadata[name] = new_metadata
             save_metadata(metadata)
@@ -158,19 +161,19 @@ def test_osmnx_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Opt
         return False, f"Error: {str(e)}", None
 
 
-def test_http_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Optional[Dict]]:
+def test_http_source(name: str, config: dict) -> tuple[bool, str | None, dict | None]:
     """Test HTTP data source availability and check for updates."""
     url = config["url"]
     local_path = config.get("local_path")
     metadata = load_metadata()
     source_metadata = metadata.get(name, {})
-    
+
     version = get_version_from_url(url)
     local_file = None
     local_date = None
     remote_date = None
     update_available = False
-    
+
     # Check if local file exists first
     if local_path:
         local_file = Path(local_path)
@@ -184,15 +187,15 @@ def test_http_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Opti
             message = "Not available locally"
     else:
         message = "No local path specified"
-    
+
     # Check remote for updates
     try:
         print(f"  Testing HTTP connection to {url}...")
         response = requests.head(url, timeout=30, allow_redirects=True)
         if response.status_code == 200:
-            content_length = response.headers.get('Content-Length', 'unknown')
+            content_length = response.headers.get("Content-Length", "unknown")
             remote_date = get_remote_file_date(url)
-            
+
             if local_file and local_file.exists() and remote_date and local_date:
                 if remote_date > local_date:
                     update_available = True
@@ -201,18 +204,18 @@ def test_http_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Opti
                     message += f" | Remote available (Last-Modified: {remote_date.strftime('%Y-%m-%d %H:%M:%S')})"
             else:
                 message += f" | Available online (Status: {response.status_code}, Size: {content_length} bytes)"
-            
+
             # Update metadata
             new_metadata = {
                 "version": version or source_metadata.get("version"),
                 "local_date": local_date.isoformat() if local_date else None,
                 "remote_date": remote_date.isoformat() if remote_date else None,
                 "last_checked": datetime.now().isoformat(),
-                "update_available": update_available
+                "update_available": update_available,
             }
             metadata[name] = new_metadata
             save_metadata(metadata)
-            
+
             return True, message, new_metadata
         elif response.status_code == 301 or response.status_code == 302:
             # Follow redirect
@@ -223,7 +226,11 @@ def test_http_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Opti
                 return False, f"Redirected but returned status {response.status_code}", None
         else:
             if local_path and Path(local_path).exists():
-                return True, f"Online unavailable (Status: {response.status_code}), but available locally at {local_path}", None
+                return (
+                    True,
+                    f"Online unavailable (Status: {response.status_code}), but available locally at {local_path}",
+                    None,
+                )
             return False, f"Status code: {response.status_code}", None
     except requests.exceptions.Timeout:
         if local_path and Path(local_path).exists():
@@ -239,16 +246,16 @@ def test_http_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Opti
         return False, f"Error: {str(e)}", None
 
 
-def test_arcgis_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Optional[Dict]]:
+def test_arcgis_source(name: str, config: dict) -> tuple[bool, str | None, dict | None]:
     """Test ArcGIS REST service availability and check for updates."""
     url = config["url"]
     params = config.get("params", {})
     local_path = config.get("local_path")
     metadata = load_metadata()
-    
+
     local_date = None
     update_available = False
-    
+
     # Check if local file exists first
     if local_path:
         local_file = Path(local_path)
@@ -261,7 +268,7 @@ def test_arcgis_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Op
             message = "Not available locally"
     else:
         message = "No local path specified"
-    
+
     try:
         print(f"  Testing ArcGIS REST service at {url}...")
         response = requests.get(url, params=params, timeout=30)
@@ -273,30 +280,46 @@ def test_arcgis_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Op
                     # Check if service has been updated (basic check - could be enhanced)
                     # For now, just note that service is available
                     message += f" | Available online (Status: {response.status_code}, Features: {feature_count})"
-                    
+
                     # Update metadata
                     new_metadata = {
                         "local_date": local_date.isoformat() if local_date else None,
                         "last_checked": datetime.now().isoformat(),
                         "update_available": update_available,
-                        "feature_count": feature_count
+                        "feature_count": feature_count,
                     }
                     metadata[name] = new_metadata
                     save_metadata(metadata)
-                    
+
                     return True, message, new_metadata
                 else:
-                    error_msg = data.get('error', {}).get('message', 'Unknown error') if isinstance(data.get('error'), dict) else str(data.get('error', 'Unknown error'))
+                    error_msg = (
+                        data.get("error", {}).get("message", "Unknown error")
+                        if isinstance(data.get("error"), dict)
+                        else str(data.get("error", "Unknown error"))
+                    )
                     if local_path and Path(local_path).exists():
-                        return True, f"Online service error ({error_msg}), but available locally at {local_path}", None
+                        return (
+                            True,
+                            f"Online service error ({error_msg}), but available locally at {local_path}",
+                            None,
+                        )
                     return False, f"Service returned error: {error_msg}", None
             except json.JSONDecodeError:
                 if local_path and Path(local_path).exists():
-                    return True, f"Online response invalid JSON, but available locally at {local_path}", None
+                    return (
+                        True,
+                        f"Online response invalid JSON, but available locally at {local_path}",
+                        None,
+                    )
                 return False, "Response is not valid JSON", None
         else:
             if local_path and Path(local_path).exists():
-                return True, f"Online unavailable (Status: {response.status_code}), but available locally at {local_path}", None
+                return (
+                    True,
+                    f"Online unavailable (Status: {response.status_code}), but available locally at {local_path}",
+                    None,
+                )
             return False, f"Status code: {response.status_code}", None
     except requests.exceptions.Timeout:
         if local_path and Path(local_path).exists():
@@ -312,38 +335,40 @@ def test_arcgis_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Op
         return False, f"Error: {str(e)}", None
 
 
-def test_census_api(name: str, config: Dict) -> Tuple[bool, Optional[str], Optional[Dict]]:
+def test_census_api(
+    name: str, config: dict  # noqa: ARG001
+) -> tuple[bool, str | None, dict | None]:
     """Test Census API availability (requires API key)."""
     metadata = load_metadata()
     try:
-        from dotenv import dotenv_values
         from census import Census
-        
+        from dotenv import dotenv_values
+
         env_path = Path(".env")
         if not env_path.exists():
             return False, "No .env file found. Census API requires CENSUS_API_KEY.", None
-        
+
         config_env = dotenv_values(".env")
         api_key = config_env.get("CENSUS_API_KEY")
-        
+
         if not api_key:
             return False, "CENSUS_API_KEY not found in .env file.", None
-        
-        print(f"  Testing Census API with provided key...")
+
+        print("  Testing Census API with provided key...")
         c = Census(api_key)
         # Test with a small query for Maine (state FIPS 23)
         # Use get method for block-level data (state_county_block method doesn't exist)
         result = c.pl.get(
-            fields=['GEO_ID', 'P1_001N'],
-            geo={'for': 'block:*', 'in': 'state:23 county:001'},  # Androscoggin County
-            year=2020
+            fields=["GEO_ID", "P1_001N"],
+            geo={"for": "block:*", "in": "state:23 county:001"},  # Androscoggin County
+            year=2020,
         )
         if result and len(result) > 0:
             message = f"Available. Test query returned {len(result)} blocks."
             # Update metadata
             new_metadata = {
                 "last_checked": datetime.now().isoformat(),
-                "update_available": False  # API is real-time
+                "update_available": False,  # API is real-time
             }
             metadata[name] = new_metadata
             save_metadata(metadata)
@@ -356,13 +381,13 @@ def test_census_api(name: str, config: Dict) -> Tuple[bool, Optional[str], Optio
         return False, f"Error: {str(e)}", None
 
 
-def probe_data_source(name: str, config: Dict) -> Tuple[bool, Optional[str], Optional[Dict]]:
+def probe_data_source(name: str, config: dict) -> tuple[bool, str | None, dict | None]:
     """Probe a single data source for availability."""
     print(f"\nProbing: {name}")
     print(f"  Description: {config['description']}")
-    
+
     source_type = config["type"]
-    
+
     if source_type == "osmnx":
         return test_osmnx_source(name, config)
     elif source_type == "http":
@@ -380,34 +405,30 @@ def main():
     print("=" * 70)
     print("Access Project - Data Source Availability Probe")
     print("=" * 70)
-    
+
     results = {}
     unavailable_sources = []
     updates_available = []
-    
+
     for name, config in DATA_SOURCES.items():
         is_available, message, metadata = probe_data_source(name, config)
-        results[name] = {
-            "available": is_available,
-            "message": message,
-            "metadata": metadata
-        }
-        
+        results[name] = {"available": is_available, "message": message, "metadata": metadata}
+
         if not is_available:
             unavailable_sources.append((name, message))
         elif metadata and metadata.get("update_available"):
             updates_available.append((name, message))
-    
+
     # Print summary
     print("\n" + "=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    
+
     for name, result in results.items():
         status = "✓ AVAILABLE" if result["available"] else "✗ UNAVAILABLE"
         print(f"\n{status}: {name}")
         print(f"  {result['message']}")
-    
+
     if updates_available:
         print("\n" + "=" * 70)
         print("UPDATES AVAILABLE")
@@ -416,7 +437,7 @@ def main():
             print(f"\n{name}:")
             print(f"  {message}")
         print("\nConsider running update_data_sources.py to download updates.")
-    
+
     if unavailable_sources:
         print("\n" + "=" * 70)
         print("UNAVAILABLE SOURCES - ACTION REQUIRED")
@@ -437,4 +458,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
