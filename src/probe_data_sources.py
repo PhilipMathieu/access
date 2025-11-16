@@ -69,10 +69,14 @@ def get_remote_file_date(url: str) -> datetime | None:
                     result = parsedate_to_datetime(last_modified)
                     if isinstance(result, datetime):
                         return result
-                except (ValueError, TypeError):
-                    pass
-    except Exception:
-        pass
+                except (ValueError, TypeError) as e:
+                    # Invalid date format - log and continue
+                    import logging
+                    logging.debug(f"Could not parse Last-Modified header '{last_modified}': {e}")
+    except Exception as e:
+        # Network or other error - log and continue
+        import logging
+        logging.debug(f"Error getting remote file date from {url}: {e}")
     return None
 
 
@@ -417,7 +421,8 @@ def main():
     updates_available = []
 
     for name, config in DATA_SOURCES.items():
-        assert isinstance(config, dict)
+        if not isinstance(config, dict):
+            raise TypeError(f"Config for {name} must be a dict, got {type(config)}")
         is_available, message, metadata = probe_data_source(name, config)
         results[name] = {"available": is_available, "message": message, "metadata": metadata}
 
