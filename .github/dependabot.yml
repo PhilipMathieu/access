@@ -2,13 +2,13 @@
 # See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 #
 # Note: This project uses uv for dependency management (pyproject.toml + uv.lock)
-# Dependabot uses the "pip" ecosystem which works with uv projects by reading pyproject.toml
-# CI workflows use `uv sync` to install dependencies from the lock file
+# As of March 2025, Dependabot natively supports the "uv" package-ecosystem
+# See: https://github.blog/changelog/2025-03-13-dependabot-version-updates-now-support-uv-in-general-availability/
 
 version: 2
 updates:
   # Monitor Python dependencies (managed by uv)
-  - package-ecosystem: "pip"
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -31,10 +31,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    # Allow both direct and indirect dependency updates
-    allow:
-      - dependency-type: "direct"
-      - dependency-type: "indirect"
 
   # Monitor GitHub Actions
   - package-ecosystem: "github-actions"
