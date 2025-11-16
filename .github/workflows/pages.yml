@@ -1,55 +1,37 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Deploy main branch to production
   push:
     branches: ["main"]
-
-  # Deploy PR previews
-  pull_request:
-    branches: ["main"]
-    types: [opened, synchronize, reopened, closed]
-
-  # Allow manual deployment
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pages: write
+  id-token: write
 
 concurrency:
-  group: pages-${{ github.ref }}
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
   deploy:
-    # Skip on PR close events (handled by cleanup job)
-    if: github.event.action != 'closed'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs'
 
       - name: Deploy to GitHub Pages
-        uses: rossjrw/pr-preview-action@v1
-        with:
-          source-dir: ./docs
-          preview-branch: gh-pages
-          umbrella-dir: pr-previews
-          action: auto
-
-  cleanup:
-    # Only run when PR is closed
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Remove PR Preview
-        uses: rossjrw/pr-preview-action@v1
-        with:
-          source-dir: ./docs
-          preview-branch: gh-pages
-          umbrella-dir: pr-previews
-          action: remove
+        id: deployment
+        uses: actions/deploy-pages@v4
