@@ -123,7 +123,9 @@ def compare_schemas(old_schema: dict, new_schema: dict) -> dict[str, Any]:
         old_type = old_dtypes.get(col)
         new_type = new_dtypes.get(col)
         if old_type and new_type and old_type != new_type:
-            changes["type_changes"].append({"column": col, "old_type": old_type, "new_type": new_type})
+            changes["type_changes"].append(
+                {"column": col, "old_type": old_type, "new_type": new_type}
+            )
 
     # Check row count change
     old_count = old_schema.get("row_count", 0)
@@ -154,7 +156,8 @@ def compare_schemas(old_schema: dict, new_schema: dict) -> dict[str, Any]:
 
 
 def validate_data_quality(
-    file_path: Path, schema: dict | None = None  # noqa: ARG001
+    file_path: Path,
+    schema: dict | None = None,  # noqa: ARG001
 ) -> dict[str, Any]:
     """Validate data quality metrics."""
     quality_metrics: dict[str, Any] = {
@@ -336,7 +339,9 @@ def validate_data_file(file_path: Path, source_name: str | None = None) -> dict[
 
             if schema_changes["crs_change"]:
                 crs_change = schema_changes["crs_change"]
-                validation_result["warnings"].append(f"CRS changed: {crs_change['old']} -> {crs_change['new']}")
+                validation_result["warnings"].append(
+                    f"CRS changed: {crs_change['old']} -> {crs_change['new']}"
+                )
 
         # Save current schema version
         if source_name not in schema_versions:
@@ -355,10 +360,14 @@ def validate_data_file(file_path: Path, source_name: str | None = None) -> dict[
 
     # Check for quality issues
     if quality_metrics["invalid_geometries"] > 0:
-        validation_result["warnings"].append(f"{quality_metrics['invalid_geometries']} invalid geometries")
+        validation_result["warnings"].append(
+            f"{quality_metrics['invalid_geometries']} invalid geometries"
+        )
 
     if quality_metrics["empty_geometries"] > 0:
-        validation_result["warnings"].append(f"{quality_metrics['empty_geometries']} empty geometries")
+        validation_result["warnings"].append(
+            f"{quality_metrics['empty_geometries']} empty geometries"
+        )
 
     high_missing = {
         col: metrics
@@ -366,7 +375,9 @@ def validate_data_file(file_path: Path, source_name: str | None = None) -> dict[
         if metrics["percent"] > 10
     }
     if high_missing:
-        warnings.append(f"High missing values (>10%): {', '.join(high_missing.keys())}")
+        validation_result["warnings"].append(
+            f"High missing values (>10%): {', '.join(high_missing.keys())}"
+        )
 
     # Check coordinate system
     crs_valid, crs_message = check_coordinate_system_consistency(file_path)

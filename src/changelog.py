@@ -161,8 +161,9 @@ def create_notification(
         try:
             with open(notifications_file) as f:
                 notifications = json.load(f)
-        except (OSError, json.JSONDecodeError):
-            pass
+        except (OSError, json.JSONDecodeError) as e:
+            logging.warning(f"Failed to load notifications file: {e}. Starting with empty list.")
+            notifications = []
 
     notifications.append(notification)
 
@@ -217,8 +218,8 @@ def mark_notification_read(notification_timestamp: str):
 
         with open(notifications_file, "w") as f:
             json.dump(notifications, f, indent=2, default=str)
-    except (OSError, json.JSONDecodeError):
-        pass
+    except (OSError, json.JSONDecodeError) as e:
+        logging.error(f"Failed to update notification read status: {e}")
 
 
 def main():

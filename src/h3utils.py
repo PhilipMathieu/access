@@ -1,9 +1,12 @@
 import json
+import logging
 from pathlib import Path
 
 import matplotlib
 import pandas as pd
 from jsonschema import validate
+
+logger = logging.getLogger(__name__)
 
 try:
     from .config.defaults import DEFAULT_H3_RESOLUTION
@@ -48,13 +51,13 @@ def h3_merge(df, reln=None, inplace=False, resolution=None, region_config=None):
 
 # Summarize a given column by h3 fraction
 def h3_weight(df, col, prefix="h3_"):
-    print(f"Creating {prefix + col}")
+    logger.info(f"Creating {prefix + col}")
     df[prefix + col] = df[col] * df["h3_fraction"]
 
 
 # Summarize a given column by h3 fraction, further weighting by population fraction
 def h3_weight_pop(df, col, prefix="h3_"):
-    print(f"Creating {prefix + col}")
+    logger.info(f"Creating {prefix + col}")
     df[prefix + col] = df[col] * df["P1_001N"] * df["h3_fraction"]
 
 
@@ -64,7 +67,7 @@ def h3_plot(df, col: str, lognorm=True, inplace=False, **plot_kwargs):
     if "h3id" not in df.index.names:
         df = h3_merge(df)
     if not col.startswith("h3_"):
-        print(f"Interpreting '{col}' as 'h3_{col}'")
+        logger.info(f"Interpreting '{col}' as 'h3_{col}'")
         col = "h3_" + col
     if col not in df.columns:
         h3_weight(df, col[3:])

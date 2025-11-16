@@ -72,10 +72,12 @@ def get_remote_file_date(url: str) -> datetime | None:
                 except (ValueError, TypeError) as e:
                     # Invalid date format - log and continue
                     import logging
+
                     logging.debug(f"Could not parse Last-Modified header '{last_modified}': {e}")
     except Exception as e:
         # Network or other error - log and continue
         import logging
+
         logging.debug(f"Error getting remote file date from {url}: {e}")
     return None
 
