@@ -34,6 +34,7 @@
             position: relative;
         }
 
+
         /* Top header - Title */
         .print-header {
             padding: 12pt 20pt;
@@ -76,49 +77,24 @@
             pointer-events: none;
         }
 
-        /* Scale bar - bottom left on map */
-        .map-overlay.print-scale {
-            bottom: 15pt;
-            left: 15pt;
-            background: white;
-            border: 1.5pt solid #333;
-            padding: 6pt 8pt;
-            box-shadow: 0 2pt 6pt rgba(0,0,0,0.3);
+        /* Style MapLibre scale control for print */
+        .maplibregl-ctrl-scale {
+            background: white !important;
+            border: 1pt solid #333 !important;
+            padding: 4pt 6pt !important;
+            box-shadow: 0 1pt 3pt rgba(0,0,0,0.2) !important;
+            font-size: 9pt !important;
+            line-height: 1.2 !important;
+            z-index: 1000 !important;
+            display: block !important;
         }
 
-        .print-scale .scale-label {
-            text-align: center;
-            font-size: 8pt;
-            margin: 2pt 0 0 0;
-            color: #333;
-            line-height: 1.2;
-        }
-
-        .print-scale .scale-bar {
-            width: 40mm;
-            height: 4pt;
-            border: 1pt solid #333;
-            border-top: none;
-            position: relative;
-            margin: 4pt 0;
-        }
-
-        .print-scale .scale-bar::before,
-        .print-scale .scale-bar::after {
-            content: '';
-            position: absolute;
-            top: -4pt;
-            width: 1pt;
-            height: 4pt;
-            background: #333;
-        }
-
-        .print-scale .scale-bar::before {
-            left: 0;
-        }
-
-        .print-scale .scale-bar::after {
-            right: 0;
+        .maplibregl-ctrl-scale-line {
+            border: 1.5pt solid #333 !important;
+            border-top: none !important;
+            color: #333 !important;
+            font-size: 9pt !important;
+            padding: 0 4pt !important;
         }
 
         /* North arrow - upper right on map */
@@ -289,8 +265,36 @@
             top: 20px;
             right: 20px;
             display: flex;
+            flex-direction: column;
             gap: 10px;
             z-index: 1000;
+        }
+
+        .instructions {
+            background: white;
+            border: 1pt solid #ccc;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 12px;
+            color: #555;
+            line-height: 1.5;
+            max-width: 250px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .instructions h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .instructions p {
+            margin: 0 0 6px 0;
+        }
+
+        .instructions p:last-child {
+            margin-bottom: 0;
         }
 
         .btn {
@@ -348,6 +352,12 @@
     <div class="controls">
         <button class="btn btn-secondary" onclick="window.close()">Close</button>
         <button class="btn" onclick="window.print()">Print</button>
+        <div class="instructions">
+            <h4>Adjust Map View</h4>
+            <p>You can pan and zoom the map to adjust the view before printing.</p>
+            <p>Use the map controls to change the area shown.</p>
+            <p>Click Print when ready.</p>
+        </div>
     </div>
 
     <!-- Print page layout -->
@@ -364,14 +374,10 @@
         <div class="map-area">
             <div id="map"></div>
             
-            <!-- Scale bar overlay on map -->
-            <div class="map-overlay print-scale">
-                <div class="scale-bar"></div>
-                <div class="scale-label" id="print-scale-distance">0 — 5 km</div>
-            </div>
 
             <!-- North arrow overlay on map -->
             <div class="map-overlay print-north"></div>
+
         </div>
 
         <!-- Bottom footer - Legend and attribution -->

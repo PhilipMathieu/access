@@ -39,6 +39,14 @@ const map = new maplibregl.Map({
     hash: false // Don't use URL hash on print page
 });
 
+// Add default MapLibre scale control after map is ready
+map.on('style.load', () => {
+    map.addControl(new maplibregl.ScaleControl({
+        maxWidth: 100,
+        unit: 'metric'
+    }), 'bottom-left');
+});
+
 // Update print metadata
 function updatePrintMetadata() {
     const now = new Date();
@@ -76,8 +84,8 @@ function updatePrintScale() {
     const y = map.getCenter().lat;
     const metersPerPixel = 40075017 * Math.abs(Math.cos(y * Math.PI / 180)) / Math.pow(2, map.getZoom() + 8);
 
-    // Scale bar is 40mm on print (approximately 151 pixels at 96 DPI)
-    const scaleBarWidthPixels = 151;
+    // Scale bar is 25mm on print (approximately 94 pixels at 96 DPI)
+    const scaleBarWidthPixels = 94;
     const scaleBarMeters = metersPerPixel * scaleBarWidthPixels;
 
     // Convert to appropriate unit (km or miles)
@@ -97,7 +105,7 @@ function updatePrintScale() {
             roundedKm = 1;
         }
         scaleText = `0 — ${roundedKm} km`;
-        scaleRatio = `1:${Math.round(roundedKm * 1000 / 0.04).toLocaleString()}`; // 40mm in meters
+        scaleRatio = `1:${Math.round(roundedKm * 1000 / 0.025).toLocaleString()}`; // 25mm in meters
     } else {
         let roundedM;
         if (scaleBarMeters >= 500) {
@@ -110,7 +118,7 @@ function updatePrintScale() {
             roundedM = 50;
         }
         scaleText = `0 — ${roundedM} m`;
-        scaleRatio = `1:${Math.round(roundedM / 0.04).toLocaleString()}`;
+        scaleRatio = `1:${Math.round(roundedM / 0.025).toLocaleString()}`;
     }
 
     // Update scale distance label
