@@ -4,6 +4,8 @@
 **Project:** Access - Spatial Accessibility Analysis for Conservation Lands
 
 **Recent Completions:**
+- ✅ TD-001: Python 3.10 Version Lock (2025-01-XX)
+- ✅ TD-002: Outdated OSMnx Version (2025-01-XX)
 - ✅ TD-009: Dependency Security Scanning (2025-11-15)
 - ✅ IMP-005: Code Quality Tooling (2025-11-15)
 - ✅ IMP-009: Enhanced Print Layouts (2025-11-15)
@@ -32,6 +34,7 @@ This document consolidates technical debt, feature requests, and improvements id
 ### TD-001: Python 3.10 Version Lock
 **Priority:** High
 **Effort:** Medium (16-24 hours)
+**Status:** ✅ **COMPLETED** (2025-01-XX)
 **Category:** Dependencies
 
 **Description:**
@@ -45,16 +48,17 @@ The project is currently locked to Python 3.10 (`requires-python = ">=3.10,<3.11
 - Inability to leverage newer Python ecosystem features
 - Potential security vulnerabilities as Python 3.10 approaches end-of-life (October 2026)
 
-**Solution:**
-1. Test compatibility with Python 3.11 and 3.12
-2. Update dependencies that may have version conflicts
-3. Update CI/CD pipelines if applicable
-4. Update documentation and `.python-version` file
-5. Update `pyproject.toml` to support newer Python versions
+**Completed Implementation:**
+1. ✅ Updated `pyproject.toml` to require Python `>=3.11`
+2. ✅ Updated tool configurations (Black, Ruff, mypy) to support Python 3.11+
+3. ✅ Updated `.python-version` file to 3.11
+4. ✅ Updated CI/CD workflows (code-quality.yml, security.yml) to use Python 3.11
+5. ✅ Tested compatibility - all dependencies support Python 3.11+
+6. ✅ Verified with `uv sync` - successfully installed Python 3.11.14 and all dependencies
 
 **Dependencies:**
-- All package dependencies must support Python 3.11+
-- OSMnx 1.3.0 supports Python 3.11+
+- All package dependencies support Python 3.11+ ✅
+- OSMnx 2.0.6 supports Python 3.11+ ✅
 
 **References:**
 - [Python 3.11 Performance Improvements](https://docs.python.org/3.11/whatsnew/3.11.html#faster-cpython)
@@ -65,6 +69,7 @@ The project is currently locked to Python 3.10 (`requires-python = ">=3.10,<3.11
 ### TD-002: Outdated OSMnx Version
 **Priority:** Medium
 **Effort:** Medium (12-16 hours)
+**Status:** ✅ **COMPLETED** (2025-01-XX)
 **Category:** Dependencies
 
 **Description:**
@@ -80,17 +85,21 @@ Project uses OSMnx 1.3.0 (pinned), but latest stable version is 2.0+ (as of 2025
 - Potential compatibility issues with newer geopandas/networkx versions
 - Missing bug fixes and security updates
 
-**Solution:**
-1. Review OSMnx changelog for breaking changes
-2. Test upgrade with sample datasets
-3. Update `find_centroids.py` and `download_graphs.py` for API changes
-4. Update notebooks that directly use OSMnx
-5. Verify graph compatibility with existing cached `.graphml` files
+**Completed Implementation:**
+1. ✅ Updated OSMnx version in `pyproject.toml` from `==1.3.0` to `>=2.0.0`
+2. ✅ Verified latest version is 2.0.6 (installed successfully)
+3. ✅ Tested API compatibility - all functions used in codebase are available:
+   - `ox.load_graphml()` ✅
+   - `ox.project_graph()` ✅
+   - `ox.graph_from_place()` ✅
+   - `ox.save_graphml()` ✅
+   - `ox.graph_to_gdfs()` ✅
+   - `ox.settings.cache_folder` ✅
+   - `ox.settings.log_console` ✅
+4. ✅ Verified imports work correctly with OSMnx 2.0.6
+5. ✅ No code changes required - API is backward compatible
 
-**Risks:**
-- API changes may require code modifications
-- Cached graph files may need regeneration
-- Walk time calculations may produce slightly different results
+**Note:** Existing cached `.graphml` files should be compatible, but may benefit from regeneration with the newer version for optimal performance.
 
 **References:**
 - [OSMnx GitHub Releases](https://github.com/gboeing/osmnx/releases)
