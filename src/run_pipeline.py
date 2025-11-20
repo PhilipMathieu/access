@@ -23,9 +23,16 @@ from dotenv import load_dotenv
 
 from config.defaults import DEFAULT_H3_RESOLUTION_AREA, DEFAULT_TRAVEL_SPEED, DEFAULT_TRIP_TIMES
 from config.regions import get_region_config
+from exceptions import DataError, ProcessingError, ValidationError
 from h3_utils.relationship import generate_h3_relationship_area
 from merging.analysis import create_ejblocks
 from merging.blocks import dissolve_blocks, merge_walk_times
+from utils.validation import (
+    validate_blocks_data,
+    validate_file_exists,
+    validate_output_file,
+    validate_walk_times_data,
+)
 from visualization.figures import generate_all_figures
 from walk_times.calculate import process_walk_times
 
@@ -138,6 +145,17 @@ def run_pipeline(
         try:
             walk_times_output = Path("data/walk_times/walk_times_block_df.parquet")
 
+            # Validation checkpoint: Validate input files
+            logger.info("Validating input files for walk time calculation...")
+            validate_file_exists(Path("data/graphs/maine_walk.graphml"), "Graph file")
+            validate_file_exists(
+                region_config.get_blocks_path(with_nodes=True), "Blocks file with nodes"
+            )
+            validate_file_exists(
+                Path("data/conserved_lands/Maine_Conserved_Lands_with_nodes.shp.zip"),
+                "Conserved lands file",
+            )
+
             process_walk_times(
                 geography_type="blocks",
                 graph_path="data/graphs/maine_walk.graphml",
@@ -149,9 +167,21 @@ def run_pipeline(
                 region_config=region_config,
                 n_jobs=n_jobs,
             )
+
+            # Validation checkpoint: Validate output
+            logger.info("Validating walk times output...")
+            validate_output_file(walk_times_output)
+            import pandas as pd
+
+            walk_times_df = pd.read_parquet(walk_times_output)
+            validate_walk_times_data(walk_times_df)
+
             logger.info(f"✓ Walk times calculated: {walk_times_output}")
-        except Exception as e:
+        except (DataError, ValidationError, ProcessingError) as e:
             logger.error(f"✗ Error calculating walk times: {e}")
+            success = False
+        except Exception as e:
+            logger.error(f"✗ Unexpected error calculating walk times: {e}", exc_info=True)
             success = False
     else:
         logger.info("Skipping walk time calculation")
@@ -200,6 +230,12 @@ def run_pipeline(
             blocks_path = Path("data/joins/block_dissolve.parquet")
             ejblocks_output = Path("data/joins/ejblocks.parquet")
 
+            # Validation checkpoint: Validate input files
+            logger.info("Validating input files for ejblocks creation...")
+            validate_file_exists(blocks_path, "Dissolved blocks file")
+            validate_file_exists(Path("data/cejst-me.zip"), "CEJST file")
+            validate_file_exists(region_config.get_relationship_file_path(), "Relationship file")
+
             create_ejblocks(
                 blocks_path=blocks_path,
                 census_api_key=census_api_key,
@@ -209,9 +245,21 @@ def run_pipeline(
                 state_fips=region_config.state_fips,
                 region_config=region_config,
             )
+
+            # Validation checkpoint: Validate ejblocks output
+            logger.info("Validating ejblocks output...")
+            validate_output_file(ejblocks_output)
+            import geopandas as gpd
+
+            ejblocks_gdf = gpd.read_parquet(ejblocks_output)
+            validate_blocks_data(ejblocks_gdf)
+
             logger.info(f"✓ Created ejblocks: {ejblocks_output}")
-        except Exception as e:
+        except (DataError, ValidationError, ProcessingError) as e:
             logger.error(f"✗ Error creating ejblocks: {e}")
+            success = False
+        except Exception as e:
+            logger.error(f"✗ Unexpected error creating ejblocks: {e}", exc_info=True)
             success = False
     else:
         logger.info("Skipping analysis step")

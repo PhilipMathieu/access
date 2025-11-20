@@ -11,6 +11,8 @@ from census import Census
 
 from config.defaults import DEFAULT_CENSUS_FIELDS, DEFAULT_CENSUS_YEAR
 from config.regions import RegionConfig
+from exceptions import CensusAPIError, ConfigurationError
+from utils.retry import retry_on_rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +89,7 @@ def fetch_census_data(
     if region_config:
         state_fips = region_config.state_fips
     elif state_fips is None:
-        raise ValueError("Either state_fips or region_config must be provided")
+        raise ConfigurationError("Either state_fips or region_config must be provided")
 
     # Ensure state_fips is string with leading zero
     state_fips = str(state_fips).zfill(2)
@@ -107,7 +109,7 @@ def fetch_census_data(
 
     # Need to fetch from API
     if not api_key:
-        raise ValueError(
+        raise ConfigurationError(
             "No API key provided and no cached data found. "
             "Either provide an API key or ensure cached data exists. "
             f"Cache location: {cache_path}"
@@ -124,13 +126,36 @@ def fetch_census_data(
     # Use get method for block-level data (state_county_block method doesn't exist)
     # The get method automatically calls _switch_endpoints to set the correct URL
     # Query format: for=block:*&in=state:XX county:*
-    me_census = pd.DataFrame.from_records(
-        c.pl.get(
-            fields=census_fields,
-            geo={"for": "block:*", "in": f"state:{state_fips} county:*"},
-            year=year,
-        )
-    )
+    # Wrap API call with retry logic for rate limiting and transient failures
+    @retry_on_rate_limit
+    def _fetch_census_api():
+        """Fetch census data from API with retry logic."""
+        try:
+            return c.pl.get(
+                fields=census_fields,
+                geo={"for": "block:*", "in": f"state:{state_fips} county:*"},
+                year=year,
+            )
+        except Exception as e:
+            error_msg = str(e).lower()
+            if "rate limit" in error_msg or "429" in error_msg:
+                raise CensusAPIError(f"Census API rate limit exceeded: {e}") from e
+            elif "timeout" in error_msg or "connection" in error_msg:
+                raise CensusAPIError(f"Census API connection error: {e}") from e
+            elif "invalid" in error_msg or "400" in error_msg or "401" in error_msg:
+                raise CensusAPIError(f"Census API request error: {e}") from e
+            else:
+                raise CensusAPIError(f"Unexpected Census API error: {e}") from e
+
+    try:
+        api_data = _fetch_census_api()
+        me_census = pd.DataFrame.from_records(api_data)
+    except CensusAPIError:
+        # Re-raise our custom exceptions
+        raise
+    except Exception as e:
+        # Catch any other unexpected errors
+        raise CensusAPIError(f"Failed to fetch census data: {e}") from e
 
     # Extract GEOID20 from GEO_ID (format: 1000000US230110205001020)
     me_census["GEOID20"] = me_census["GEO_ID"].apply(lambda s: s[9:])
@@ -348,7 +373,7 @@ def create_ejblocks(
     # Process CEJST data
     logger.info("Processing CEJST data")
     if cejst_path is None or relationship_file_path is None:
-        raise ValueError("cejst_path and relationship_file_path must be provided")
+        raise ConfigurationError("cejst_path and relationship_file_path must be provided")
     cejst_block = process_cejst_data(cejst_path, relationship_file_path)
 
     # Merge CEJST data
